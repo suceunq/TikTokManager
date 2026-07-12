@@ -1,0 +1,31 @@
+appId: com.tiktokmanager.app
+productName: TikTok Manager
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+extraResources:
+  - from: node_modules/ffmpeg-static
+    to: ffmpeg-static
+    filter:
+      - 'ffmpeg.exe'
+  - from: build
+    to: build
+    filter:
+      - 'icon.ico'
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: TikTok Manager
+  artifactName: 'TikTokManager-Setup-${version}.exe'
