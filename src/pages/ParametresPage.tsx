@@ -113,7 +113,7 @@ function UpdateSection() {
         <p className="hint">Recherche indisponible en mode développement (nécessite une version installée via l'installateur).</p>
       )}
       {phase === 'checking' && <p className="hint">Recherche en cours...</p>}
-      {phase === 'unavailable' && <p style={{ color: 'var(--color-success, #1a9d5c)' }}>TikTok Manager est à jour.</p>}
+      {phase === 'unavailable' && <p style={{ color: 'var(--color-success)' }}>TikTok Manager est à jour.</p>}
 
       {phase === 'available' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -130,7 +130,7 @@ function UpdateSection() {
       {phase === 'downloading' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p>Téléchargement en cours...</p>
-          <div style={{ height: 8, borderRadius: 4, background: '#eee', overflow: 'hidden' }}>
+          <div style={{ height: 8, borderRadius: 4, background: 'var(--color-border)', overflow: 'hidden' }}>
             <div
               style={{
                 height: '100%',
@@ -151,7 +151,7 @@ function UpdateSection() {
         </div>
       )}
 
-      {phase === 'error' && <p style={{ color: '#c0392b' }}>{state?.errorMessage ?? 'Erreur lors de la vérification.'}</p>}
+      {phase === 'error' && <p style={{ color: 'var(--color-danger)' }}>{state?.errorMessage ?? 'Erreur lors de la vérification.'}</p>}
     </div>
   );
 }
