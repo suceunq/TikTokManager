@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { getStore, persist } from './store';
 import type { HistoriqueFiltre, NouvellePublication, Publication } from '../../shared/types';
 import type { StatutPublication } from '../../shared/types';
@@ -70,7 +70,7 @@ export function create(input: NouvellePublication): Publication {
   if (duplicate) throw new Error('Une publication est déjà programmée pour ce compte à cette date et cette heure.');
   const now = new Date().toISOString();
   const publication: Publication = {
-    id: uuid(),
+    id: randomUUID(),
     compteId: input.compteId,
     type: input.type,
     titre: input.titre,

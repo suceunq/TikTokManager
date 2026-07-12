@@ -1,6 +1,6 @@
 {
   "name": "tiktok-manager",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Planification et programmation de vidéos et stories TikTok",
   "author": "TikTok Manager",
   "private": true,
@@ -18,14 +18,12 @@
     "ffmpeg-static": "^5.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2",
-    "uuid": "^9.0.1"
+    "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
     "@types/node": "^20.16.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
-    "@types/uuid": "^9.0.8",
     "@vitejs/plugin-react": "^4.3.1",
     "electron": "^31.6.0",
     "electron-builder": "^24.13.3",

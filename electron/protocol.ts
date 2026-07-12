@@ -35,7 +35,11 @@ export function registerAppMediaProtocolHandler(): void {
     const thumbnailsDir = path.resolve(getThumbnailsDir());
     const resolved = path.resolve(absolutePath);
 
-    const isAllowed = resolved.startsWith(videosDir + path.sep) || resolved.startsWith(thumbnailsDir + path.sep);
+    const isInside = (parent: string, candidate: string): boolean => {
+      const rel = path.relative(parent, candidate);
+      return rel.length > 0 && !rel.startsWith('..') && !path.isAbsolute(rel);
+    };
+    const isAllowed = isInside(videosDir, resolved) || isInside(thumbnailsDir, resolved);
     if (!isAllowed) {
       return new Response('Accès refusé', { status: 403 });
     }

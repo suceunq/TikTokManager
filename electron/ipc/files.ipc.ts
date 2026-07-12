@@ -1,7 +1,7 @@
 import { dialog, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { IPC } from '../../shared/ipc-contract';
 import type { ImportVideoResult } from '../../shared/types';
 import { getVideosDir, getThumbnailsDir } from '../paths';
@@ -27,7 +27,11 @@ export function registerFilesIpc(getMainWindow: () => BrowserWindow | null): voi
     const sourcePath = result.filePaths[0];
     const originalName = path.basename(sourcePath);
     const ext = path.extname(sourcePath) || '.mp4';
-    const id = uuid();
+    const sourceSize = fs.statSync(sourcePath).size;
+    if (sourceSize > 4 * 1024 * 1024 * 1024) {
+      throw new Error('La vidéo dépasse la limite de sécurité de 4 Go.');
+    }
+    const id = randomUUID();
     const destPath = path.join(getVideosDir(), `${id}${ext}`);
 
     fs.copyFileSync(sourcePath, destPath);

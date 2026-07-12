@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { getStore, persist } from './store';
 import type { Compte, NouveauCompte } from '../../shared/types';
 
@@ -13,7 +13,7 @@ export function getById(id: string): Compte | null {
 export function create(input: NouveauCompte): Compte {
   const now = new Date().toISOString();
   const compte: Compte = {
-    id: uuid(),
+    id: randomUUID(),
     nom: input.nom,
     pseudoTiktok: input.pseudoTiktok,
     couleur: input.couleur,
