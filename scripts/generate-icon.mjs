@@ -23,6 +23,18 @@ function mix(c1, c2, t) {
 }
 
 async function build() {
+  const masterPath = path.resolve('build', 'icon-1024.png');
+  if (fs.existsSync(masterPath)) {
+    const image = await Jimp.read(masterPath);
+    const buildDir = path.resolve('build');
+    const sizes = [16, 32, 48, 64, 128, 256];
+    const pngBuffers = [];
+    for (const size of sizes) pngBuffers.push(await image.clone().resize({ w: size, h: size }).getBuffer('image/png'));
+    fs.writeFileSync(path.join(buildDir, 'icon.ico'), await toIco(pngBuffers));
+    fs.writeFileSync(path.join(buildDir, 'icon.png'), await image.clone().resize({ w: 256, h: 256 }).getBuffer('image/png'));
+    console.log('Icône générée depuis build/icon-1024.png');
+    return;
+  }
   const image = new Jimp({ width: SIZE, height: SIZE, color: 0x000000ff });
   const cornerRadius = SIZE * 0.22;
   const cx = SIZE / 2;
