@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useUpdate } from '../context/UpdateContext';
+import { formatReleaseNotes } from '../lib/releaseNotes';
 import Button from '../components/Button';
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -119,7 +120,7 @@ function UpdateSection() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <p>Version {state?.availableVersion} disponible sur GitHub.</p>
           {state?.releaseNotes && (
-            <pre style={{ maxHeight: 128, overflowY: 'auto', fontSize: 12, whiteSpace: 'pre-wrap', margin: 0 }}>{state.releaseNotes}</pre>
+            <pre style={{ maxHeight: 128, overflowY: 'auto', fontSize: 12, whiteSpace: 'pre-wrap', margin: 0 }}>{formatReleaseNotes(state.releaseNotes)}</pre>
           )}
           <div>
             <Button onClick={() => void download()}>Télécharger la mise à jour</Button>
