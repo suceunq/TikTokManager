@@ -64,6 +64,10 @@ export function listStale(cutoffIso: string): Publication[] {
 }
 
 export function create(input: NouvellePublication): Publication {
+  const duplicate = getStore().publications.find(
+    (p) => p.statut !== 'annule' && p.compteId === input.compteId && p.scheduledAt === input.scheduledAt
+  );
+  if (duplicate) throw new Error('Une publication est déjà programmée pour ce compte à cette date et cette heure.');
   const now = new Date().toISOString();
   const publication: Publication = {
     id: uuid(),
@@ -91,6 +95,10 @@ export function update(id: string, input: NouvellePublication): Publication {
   const store = getStore();
   const publication = store.publications.find((p) => p.id === id);
   if (!publication) throw new Error('Publication introuvable');
+  const duplicate = store.publications.find(
+    (p) => p.id !== id && p.statut !== 'annule' && p.compteId === input.compteId && p.scheduledAt === input.scheduledAt
+  );
+  if (duplicate) throw new Error('Une autre publication utilise déjà ce créneau pour ce compte.');
   publication.compteId = input.compteId;
   publication.type = input.type;
   publication.titre = input.titre;

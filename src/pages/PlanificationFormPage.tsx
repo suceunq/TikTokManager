@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import type { TypeContenu } from '@shared/types';
+import type { TypeContenu, ValidationVideo } from '@shared/types';
 import { useAccounts } from '../context/AccountsContext';
 import { usePublications } from '../context/PublicationsContext';
 import { api, unwrap } from '../lib/ipc';
@@ -39,6 +39,7 @@ export default function PlanificationFormPage() {
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [videoPath, setVideoPath] = useState<string | null>(null);
   const [thumbnailPath, setThumbnailPath] = useState<string | null>(null);
+  const [validation, setValidation] = useState<ValidationVideo | null>(null);
   const [date, setDate] = useState(defaultDateTime.date);
   const [time, setTime] = useState(defaultDateTime.time);
   const [reminderLeadMinutes, setReminderLeadMinutes] = useState<string>('');
@@ -74,6 +75,7 @@ export default function PlanificationFormPage() {
       if (result) {
         setVideoPath(result.videoPath);
         setThumbnailPath(result.thumbnailPath);
+        setValidation(result.validation);
         if (!titre) setTitre(result.originalName.replace(/\.[^/.]+$/, ''));
       }
     } catch (err) {
@@ -133,6 +135,11 @@ export default function PlanificationFormPage() {
   };
 
   const videoUrl = toAppMediaUrl(videoPath);
+  const suggestions = [
+    `Tu savais ça ? ${titre || 'Voici une astuce'} — regarde jusqu’à la fin 👀`,
+    `${titre || 'Nouveau contenu'} : 3 points à retenir. Le dernier est le plus important.`,
+    `J’ai testé ${titre || 'cette méthode'} pour toi. Voici le résultat sans détour.`,
+  ];
 
   if (accounts.length === 0) {
     return (
@@ -175,6 +182,14 @@ export default function PlanificationFormPage() {
           </div>
         </div>
 
+        {validation && (
+          <div className={`video-readiness ${validation.ready ? 'is-ready' : 'has-warnings'}`}>
+            <strong>{validation.ready ? '✓ Vidéo prête à publier' : '⚠ Vérifications recommandées'}</strong>
+            <span>{validation.width ?? '?'} × {validation.height ?? '?'} · {validation.durationSeconds?.toFixed(1) ?? '?'} s · {(validation.sizeBytes / 1048576).toFixed(1)} Mo</span>
+            {validation.warnings.map((warning) => <span key={warning}>• {warning}</span>)}
+          </div>
+        )}
+
         <div className="form-row">
           <div className="field">
             <label htmlFor="type">Type de contenu</label>
@@ -209,6 +224,13 @@ export default function PlanificationFormPage() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Décrivez votre contenu..."
           />
+          <div className="content-assistant">
+            <strong>Assistant éditorial local</strong>
+            {suggestions.map((suggestion) => (
+              <button key={suggestion} type="button" onClick={() => setDescription(suggestion)}>{suggestion}</button>
+            ))}
+            <button type="button" onClick={() => setHashtags(Array.from(new Set([...hashtags, 'tiktokfr', 'astuce', 'pourtoi'])))}>+ Hashtags suggérés</button>
+          </div>
         </div>
 
         <div className="field">

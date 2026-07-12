@@ -30,7 +30,7 @@ type ViewMode = 'mois' | 'semaine';
 export default function CalendrierPage() {
   const navigate = useNavigate();
   const { accounts, getById: getAccountById } = useAccounts();
-  const { listBetween, markPublished, cancel } = usePublications();
+  const { listBetween, markPublished, cancel, update } = usePublications();
   const [viewMode, setViewMode] = useState<ViewMode>('mois');
   const [anchorDate, setAnchorDate] = useState(new Date());
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -75,6 +75,20 @@ export default function CalendrierPage() {
 
   const goToNewPublication = (day: Date) => {
     navigate('/planification/nouvelle', { state: { date: day.toISOString() } });
+  };
+
+  const movePublication = async (id: string, day: Date) => {
+    const publication = publications.find((p) => p.id === id);
+    if (!publication) return;
+    const previous = new Date(publication.scheduledAt);
+    const target = new Date(day);
+    target.setHours(previous.getHours(), previous.getMinutes(), 0, 0);
+    await update(id, {
+      compteId: publication.compteId, type: publication.type, titre: publication.titre,
+      description: publication.description, hashtags: publication.hashtags, videoPath: publication.videoPath,
+      thumbnailPath: publication.thumbnailPath, scheduledAt: target.toISOString(), reminderLeadMinutes: publication.reminderLeadMinutes,
+    });
+    await load();
   };
 
   const handlePublish = async () => {
@@ -152,6 +166,8 @@ export default function CalendrierPage() {
                 key={day.toISOString()}
                 className={`calendar-day${isSameMonth(day, anchorDate) ? '' : ' outside-month'}${isToday(day) ? ' today' : ''}`}
                 onClick={() => goToNewPublication(day)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); void movePublication(e.dataTransfer.getData('text/publication-id'), day); }}
               >
                 <span className="calendar-day-number">{format(day, 'd')}</span>
                 {dayPublications.map((p) => {
@@ -159,6 +175,8 @@ export default function CalendrierPage() {
                   return (
                     <span
                       key={p.id}
+                      draggable
+                      onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData('text/publication-id', p.id); }}
                       className="calendar-chip"
                       style={{ background: compte?.couleur ?? '#888' }}
                       onClick={(e) => {
@@ -181,7 +199,7 @@ export default function CalendrierPage() {
           {days.map((day) => {
             const dayPublications = publicationsForDay(day);
             return (
-              <div key={day.toISOString()} className="week-day-column" onClick={() => goToNewPublication(day)}>
+              <div key={day.toISOString()} className="week-day-column" onClick={() => goToNewPublication(day)} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void movePublication(e.dataTransfer.getData('text/publication-id'), day); }}>
                 <div className="week-day-header">
                   <span>{formatWeekdayShort(day)}</span>
                   <span>{format(day, 'd')}</span>
@@ -191,6 +209,8 @@ export default function CalendrierPage() {
                   return (
                     <span
                       key={p.id}
+                      draggable
+                      onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData('text/publication-id', p.id); }}
                       className="calendar-chip"
                       style={{ background: compte?.couleur ?? '#888' }}
                       onClick={(e) => {

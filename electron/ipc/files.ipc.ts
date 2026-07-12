@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { IPC } from '../../shared/ipc-contract';
 import type { ImportVideoResult } from '../../shared/types';
 import { getVideosDir, getThumbnailsDir } from '../paths';
-import { generateThumbnail } from '../media/ffmpeg';
+import { generateThumbnail, inspectVideo } from '../media/ffmpeg';
 import { handle } from './helpers';
 
 export function registerFilesIpc(getMainWindow: () => BrowserWindow | null): void {
@@ -34,11 +34,13 @@ export function registerFilesIpc(getMainWindow: () => BrowserWindow | null): voi
 
     const thumbnailDestPath = path.join(getThumbnailsDir(), `${id}.jpg`);
     const thumbnailOk = await generateThumbnail(destPath, thumbnailDestPath);
+    const validation = await inspectVideo(destPath);
 
     return {
       videoPath: destPath,
       thumbnailPath: thumbnailOk ? thumbnailDestPath : null,
       originalName,
+      validation,
     };
   });
 }

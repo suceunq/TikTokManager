@@ -780,3 +780,36 @@ a {
 .update-progress span { display: block; height: 100%; background: var(--color-primary); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .about-footer { border-top: 1px solid var(--color-border); padding-top: 12px; }
+
+.video-readiness {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.video-readiness.is-ready { border-color: #10b981; background: rgba(16,185,129,.08); }
+.video-readiness.has-warnings { border-color: #f59e0b; background: rgba(245,158,11,.08); }
+
+.content-assistant {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.content-assistant button {
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+}

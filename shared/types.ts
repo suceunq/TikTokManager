@@ -66,6 +66,17 @@ export interface ImportVideoResult {
   videoPath: string;
   thumbnailPath: string | null;
   originalName: string;
+  validation: ValidationVideo;
+}
+
+export interface ValidationVideo {
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
+  sizeBytes: number;
+  hasAudio: boolean | null;
+  ready: boolean;
+  warnings: string[];
 }
 
 export interface ApiResult<T> {
