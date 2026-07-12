@@ -8,7 +8,7 @@ const links = [
   { to: '/parametres', label: 'Paramètres', icon: '⚙️', end: true },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onAbout }: { onAbout: () => void }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -28,6 +28,7 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <button className="sidebar-about" onClick={onAbout}><span>ℹ️</span><span>À propos</span></button>
     </aside>
   );
 }

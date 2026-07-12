@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import AppRoutes from './router';
@@ -6,20 +6,31 @@ import { SettingsProvider } from './context/SettingsContext';
 import { AccountsProvider } from './context/AccountsContext';
 import { PublicationsProvider } from './context/PublicationsContext';
 import { UpdateProvider, useUpdate } from './context/UpdateContext';
+import UpdateDialog from './components/UpdateDialog';
+import AboutDialog from './components/AboutDialog';
 
-function UpdateBanner() {
+function ApplicationShell() {
   const { state } = useUpdate();
-  const navigate = useNavigate();
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
-  if (state?.phase !== 'available' && state?.phase !== 'ready') return null;
+  useEffect(() => { if (state?.phase === 'available') setUpdateOpen(true); }, [state?.phase, state?.availableVersion]);
 
   return (
-    <button className="update-banner" onClick={() => navigate('/parametres')}>
-      {state.phase === 'ready'
+    <div className="app-shell">
+      <Sidebar onAbout={() => setAboutOpen(true)} />
+      <main className="main-area">
+      {(state?.phase === 'available' || state?.phase === 'ready') && <button className="update-banner" onClick={() => setUpdateOpen(true)}>
+      {state?.phase === 'ready'
         ? `Mise à jour ${state.availableVersion} prête à installer`
         : `Mise à jour ${state.availableVersion} disponible`}
-      <span className="update-banner-link">Voir dans Paramètres</span>
-    </button>
+      <span className="update-banner-link">Voir les détails</span>
+      </button>}
+      <AppRoutes />
+      </main>
+      <UpdateDialog open={updateOpen} onClose={() => setUpdateOpen(false)} />
+      <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
+    </div>
   );
 }
 
@@ -44,13 +55,7 @@ export default function App() {
       <AccountsProvider>
         <PublicationsProvider>
           <UpdateProvider>
-            <div className="app-shell">
-              <Sidebar />
-              <main className="main-area">
-                <UpdateBanner />
-                <AppRoutes />
-              </main>
-            </div>
+            <ApplicationShell />
           </UpdateProvider>
         </PublicationsProvider>
       </AccountsProvider>
