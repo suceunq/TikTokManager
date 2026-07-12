@@ -109,6 +109,28 @@ a {
   padding: 28px 36px;
 }
 
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.update-banner-link {
+  text-decoration: underline;
+  font-weight: 500;
+}
+
 .page-header {
   display: flex;
   align-items: center;

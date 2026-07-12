@@ -73,3 +73,22 @@ export interface ApiResult<T> {
   data?: T;
   error?: string;
 }
+
+export type UpdatePhase =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'unavailable'
+  | 'downloading'
+  | 'ready'
+  | 'error'
+  | 'unavailable-dev';
+
+export interface UpdateState {
+  phase: UpdatePhase;
+  currentVersion: string;
+  availableVersion: string | null;
+  releaseNotes: string | null;
+  progressPercent: number | null;
+  errorMessage: string | null;
+}

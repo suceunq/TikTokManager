@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { useUpdate } from '../context/UpdateContext';
 import Button from '../components/Button';
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -86,6 +87,71 @@ export default function ParametresPage() {
           </Button>
         </div>
       </div>
+
+      <UpdateSection />
+    </div>
+  );
+}
+
+function UpdateSection() {
+  const { state, check, download, install } = useUpdate();
+  const phase = state?.phase ?? 'idle';
+
+  return (
+    <div className="card" style={{ maxWidth: 520, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 16 }}>Mises à jour</h2>
+          <p className="hint">Version installée : {state?.currentVersion ?? '...'}</p>
+        </div>
+        {(phase === 'idle' || phase === 'unavailable' || phase === 'error') && (
+          <Button onClick={() => void check()}>Rechercher une mise à jour</Button>
+        )}
+      </div>
+
+      {phase === 'unavailable-dev' && (
+        <p className="hint">Recherche indisponible en mode développement (nécessite une version installée via l'installateur).</p>
+      )}
+      {phase === 'checking' && <p className="hint">Recherche en cours...</p>}
+      {phase === 'unavailable' && <p style={{ color: 'var(--color-success, #1a9d5c)' }}>TikTok Manager est à jour.</p>}
+
+      {phase === 'available' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p>Version {state?.availableVersion} disponible sur GitHub.</p>
+          {state?.releaseNotes && (
+            <pre style={{ maxHeight: 128, overflowY: 'auto', fontSize: 12, whiteSpace: 'pre-wrap', margin: 0 }}>{state.releaseNotes}</pre>
+          )}
+          <div>
+            <Button onClick={() => void download()}>Télécharger la mise à jour</Button>
+          </div>
+        </div>
+      )}
+
+      {phase === 'downloading' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p>Téléchargement en cours...</p>
+          <div style={{ height: 8, borderRadius: 4, background: '#eee', overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                width: `${state?.progressPercent ?? 0}%`,
+                background: 'var(--color-primary)',
+                transition: 'width 0.2s',
+              }}
+            />
+          </div>
+          <span className="hint">{state?.progressPercent ?? 0}%</span>
+        </div>
+      )}
+
+      {phase === 'ready' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>Version {state?.availableVersion} prête. Redémarrage nécessaire pour l'installer.</span>
+          <Button onClick={() => void install()}>Installer et redémarrer</Button>
+        </div>
+      )}
+
+      {phase === 'error' && <p style={{ color: '#c0392b' }}>{state?.errorMessage ?? 'Erreur lors de la vérification.'}</p>}
     </div>
   );
 }

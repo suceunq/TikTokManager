@@ -7,10 +7,13 @@ import { registerSettingsIpc, applyStartOnLogin } from './ipc/settings.ipc';
 import { registerFilesIpc } from './ipc/files.ipc';
 import { registerPublicationsIpc } from './ipc/publications.ipc';
 import { registerShellIpc } from './ipc/shell.ipc';
+import { registerUpdaterIpc } from './ipc/updater.ipc';
 import { startScheduler, stopScheduler } from './scheduler/scheduler';
 import { createTray } from './tray/tray';
 import { isQuitting, setQuitting } from './appState';
+import { AppUpdater } from './updater';
 import * as settingsRepo from './db/settings.repo';
+import type { UpdateState } from '../shared/types';
 
 app.setName('TikTok Manager');
 app.setAppUserModelId('com.tiktokmanager.app');
@@ -18,9 +21,14 @@ app.setAppUserModelId('com.tiktokmanager.app');
 registerAppMediaProtocolScheme();
 
 let mainWindow: BrowserWindow | null = null;
+let appUpdater: AppUpdater;
 
 function getMainWindow(): BrowserWindow | null {
   return mainWindow;
+}
+
+function broadcastUpdateState(state: UpdateState): void {
+  mainWindow?.webContents.send(IPC.UPDATE.STATE_CHANGED, state);
 }
 
 function getIconPath(): string {
@@ -73,6 +81,9 @@ app.whenReady().then(() => {
   registerPublicationsIpc();
   registerShellIpc();
 
+  appUpdater = new AppUpdater(broadcastUpdateState);
+  registerUpdaterIpc(appUpdater);
+
   const settings = settingsRepo.get();
   applyStartOnLogin(settings.startOnLogin);
   createWindow(settings.launchMinimizedToTray);
@@ -82,6 +93,10 @@ app.whenReady().then(() => {
   });
 
   startScheduler(getMainWindow);
+
+  // Silent startup check - populates state (and pushes it to the renderer once created) without
+  // downloading anything automatically.
+  void appUpdater.check();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

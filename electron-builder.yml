@@ -29,3 +29,7 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: TikTok Manager
   artifactName: 'TikTokManager-Setup-${version}.exe'
+publish:
+  provider: github
+  owner: suceunq
+  repo: TikTokManager

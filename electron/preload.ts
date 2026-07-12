@@ -9,6 +9,7 @@ import type {
   Settings,
   ImportVideoResult,
   ApiResult,
+  UpdateState,
 } from '../shared/types';
 
 function invoke<T>(channel: string, ...args: unknown[]): Promise<ApiResult<T>> {
@@ -45,6 +46,17 @@ const api = {
   },
   shell: {
     openTiktokUpload: () => invoke<void>(IPC.SHELL.OPEN_TIKTOK_UPLOAD),
+  },
+  update: {
+    getState: () => invoke<UpdateState>(IPC.UPDATE.STATE),
+    check: () => invoke<UpdateState>(IPC.UPDATE.CHECK),
+    download: () => invoke<void>(IPC.UPDATE.DOWNLOAD),
+    install: () => invoke<void>(IPC.UPDATE.INSTALL),
+  },
+  onUpdateStateChanged: (callback: (state: UpdateState) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, state: UpdateState) => callback(state);
+    ipcRenderer.on(IPC.UPDATE.STATE_CHANGED, listener);
+    return () => ipcRenderer.removeListener(IPC.UPDATE.STATE_CHANGED, listener);
   },
   onNotificationNavigate: (callback: (publicationId: string) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, publicationId: string) =>

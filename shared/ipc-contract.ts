@@ -26,6 +26,13 @@ export const IPC = {
   SHELL: {
     OPEN_TIKTOK_UPLOAD: 'shell:openTiktokUpload',
   },
+  UPDATE: {
+    STATE: 'update:state',
+    CHECK: 'update:check',
+    DOWNLOAD: 'update:download',
+    INSTALL: 'update:install',
+    STATE_CHANGED: 'update:stateChanged',
+  },
   NOTIFICATIONS: {
     NAVIGATE: 'notification:navigate',
   },

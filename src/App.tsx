@@ -5,6 +5,23 @@ import AppRoutes from './router';
 import { SettingsProvider } from './context/SettingsContext';
 import { AccountsProvider } from './context/AccountsContext';
 import { PublicationsProvider } from './context/PublicationsContext';
+import { UpdateProvider, useUpdate } from './context/UpdateContext';
+
+function UpdateBanner() {
+  const { state } = useUpdate();
+  const navigate = useNavigate();
+
+  if (state?.phase !== 'available' && state?.phase !== 'ready') return null;
+
+  return (
+    <button className="update-banner" onClick={() => navigate('/parametres')}>
+      {state.phase === 'ready'
+        ? `Mise à jour ${state.availableVersion} prête à installer`
+        : `Mise à jour ${state.availableVersion} disponible`}
+      <span className="update-banner-link">Voir dans Paramètres</span>
+    </button>
+  );
+}
 
 export default function App() {
   const navigate = useNavigate();
@@ -26,12 +43,15 @@ export default function App() {
     <SettingsProvider>
       <AccountsProvider>
         <PublicationsProvider>
-          <div className="app-shell">
-            <Sidebar />
-            <main className="main-area">
-              <AppRoutes />
-            </main>
-          </div>
+          <UpdateProvider>
+            <div className="app-shell">
+              <Sidebar />
+              <main className="main-area">
+                <UpdateBanner />
+                <AppRoutes />
+              </main>
+            </div>
+          </UpdateProvider>
         </PublicationsProvider>
       </AccountsProvider>
     </SettingsProvider>
