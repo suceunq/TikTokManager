@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
 import { IPC } from '../shared/ipc-contract';
+import { buildAppMenu } from './menu';
 import { registerAppMediaProtocolScheme, registerAppMediaProtocolHandler } from './protocol';
 import { registerAccountsIpc } from './ipc/accounts.ipc';
 import { registerSettingsIpc, applyStartOnLogin } from './ipc/settings.ipc';
@@ -83,6 +84,7 @@ app.whenReady().then(() => {
 
   appUpdater = new AppUpdater(broadcastUpdateState);
   registerUpdaterIpc(appUpdater);
+  Menu.setApplicationMenu(buildAppMenu(getMainWindow, appUpdater));
 
   const settings = settingsRepo.get();
   applyStartOnLogin(settings.startOnLogin);
