@@ -101,5 +101,7 @@ export interface UpdateState {
   availableVersion: string | null;
   releaseNotes: string | null;
   progressPercent: number | null;
+  bytesPerSecond?: number | null;
+  secondsRemaining?: number | null;
   errorMessage: string | null;
 }

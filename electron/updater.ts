@@ -30,6 +30,8 @@ export class AppUpdater {
       availableVersion: null,
       releaseNotes: null,
       progressPercent: null,
+      bytesPerSecond: null,
+      secondsRemaining: null,
       errorMessage: null,
     };
 
@@ -46,7 +48,9 @@ export class AppUpdater {
       this.setState({ phase: 'unavailable', availableVersion: null, errorMessage: null });
     });
     autoUpdater.on('download-progress', (progress) => {
-      this.setState({ phase: 'downloading', progressPercent: Math.round(progress.percent) });
+      const speed = progress.bytesPerSecond || 0;
+      const remaining = speed > 0 ? Math.max(0, Math.round((progress.total - progress.transferred) / speed)) : null;
+      this.setState({ phase: 'downloading', progressPercent: Math.round(progress.percent), bytesPerSecond: speed, secondsRemaining: remaining });
     });
     autoUpdater.on('update-downloaded', () => {
       this.setState({ phase: 'ready', progressPercent: 100 });
