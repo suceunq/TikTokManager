@@ -8,17 +8,19 @@ import { PublicationsProvider } from './context/PublicationsContext';
 import { UpdateProvider, useUpdate } from './context/UpdateContext';
 import UpdateDialog from './components/UpdateDialog';
 import AboutDialog from './components/AboutDialog';
+import FeedbackDialog from './components/FeedbackDialog';
 
 function ApplicationShell() {
   const { state } = useUpdate();
   const [updateOpen, setUpdateOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => { if (state?.phase === 'available') setUpdateOpen(true); }, [state?.phase, state?.availableVersion]);
 
   return (
     <div className="app-shell">
-      <Sidebar onAbout={() => setAboutOpen(true)} />
+      <Sidebar onAbout={() => setAboutOpen(true)} onFeedback={() => setFeedbackOpen(true)} />
       <main className="main-area">
       {(state?.phase === 'available' || state?.phase === 'ready') && <button className="update-banner" onClick={() => setUpdateOpen(true)}>
       {state?.phase === 'ready'
@@ -30,6 +32,7 @@ function ApplicationShell() {
       </main>
       <UpdateDialog open={updateOpen} onClose={() => setUpdateOpen(false)} />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
+      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   );
 }

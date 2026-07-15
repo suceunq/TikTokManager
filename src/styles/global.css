@@ -380,6 +380,13 @@ a {
   gap: 10px;
   margin-top: 20px;
 }
+.sidebar-bottom { margin-top: auto; }
+.sidebar-bottom .sidebar-about { position: static; width: 100%; }
+.sidebar-feedback { color: var(--color-primary) !important; }
+.feedback-modal { max-width: 520px; }
+.feedback-field { display: grid; gap: 6px; margin-top: 14px; color: var(--color-text-muted); font-size: 12px; }
+.feedback-field input, .feedback-field textarea { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px; color: var(--color-text); background: var(--color-background); resize: vertical; }
+.feedback-copied { color: #22c55e; font-size: 12px; }
 
 /* Tag input */
 .tag-input {
