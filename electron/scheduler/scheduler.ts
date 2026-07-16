@@ -9,6 +9,7 @@ const STALE_GRACE_HOURS = 24;
 let intervalHandle: ReturnType<typeof setInterval> | null = null;
 
 function tick(getMainWindow: () => BrowserWindow | null): void {
+  try {
   const settings = settingsRepo.get();
   if (!settings.notificationsEnabled) return;
 
@@ -49,6 +50,9 @@ function tick(getMainWindow: () => BrowserWindow | null): void {
   const stale = publicationsRepo.listStale(cutoff);
   for (const pub of stale) {
     publicationsRepo.setStatut(pub.id, 'manque');
+  }
+  } catch (error) {
+    console.error('[scheduler] Échec du cycle de rappels:', error);
   }
 }
 

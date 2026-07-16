@@ -35,6 +35,7 @@ export default function CalendrierPage() {
   const [anchorDate, setAnchorDate] = useState(new Date());
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<Publication | null>(null);
 
   const rangeStart = useMemo(
@@ -55,10 +56,17 @@ export default function CalendrierPage() {
   const days = useMemo(() => eachDayOfInterval({ start: rangeStart, end: rangeEnd }), [rangeStart, rangeEnd]);
 
   const load = async () => {
-    setLoading(true);
-    const data = await listBetween(rangeStart.toISOString(), rangeEnd.toISOString());
-    setPublications(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await listBetween(rangeStart.toISOString(), rangeEnd.toISOString());
+      setPublications(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setPublications([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -151,6 +159,7 @@ export default function CalendrierPage() {
       </div>
 
       {loading && <div className="loading-state">Chargement...</div>}
+      {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
       {!loading && viewMode === 'mois' && (
         <div className="calendar-grid">

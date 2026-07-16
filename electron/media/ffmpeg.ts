@@ -18,9 +18,12 @@ export async function inspectVideo(videoPath: string): Promise<ValidationVideo> 
   const output = await new Promise<string>((resolve) => {
     const child = spawn(ffmpegPath, ['-i', videoPath, '-f', 'null', '-']);
     let stderr = '';
+    let settled = false;
+    const finish = () => { if (!settled) { settled = true; clearTimeout(timeout); resolve(stderr); } };
+    const timeout = setTimeout(() => { child.kill(); finish(); }, 60_000);
     child.stderr?.on('data', (chunk) => { stderr += chunk.toString(); });
-    child.on('error', () => resolve(stderr));
-    child.on('close', () => resolve(stderr));
+    child.on('error', finish);
+    child.on('close', finish);
   });
   const resolution = output.match(/Video:.*?\b(\d{2,5})x(\d{2,5})\b/);
   const duration = output.match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);

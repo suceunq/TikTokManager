@@ -2,33 +2,42 @@ import { IPC } from '../../shared/ipc-contract';
 import type { HistoriqueFiltre, NouvellePublication } from '../../shared/types';
 import * as publicationsRepo from '../db/publications.repo';
 import { handle } from './helpers';
+import * as accountsRepo from '../db/accounts.repo';
+import { validateDateRange, validateHistoryFilter, validateId, validatePublication } from '../validation';
 
 export function registerPublicationsIpc(): void {
   handle(IPC.PUBLICATIONS.LIST, () => publicationsRepo.list());
 
-  handle(IPC.PUBLICATIONS.LIST_BETWEEN, (startIso: string, endIso: string) =>
-    publicationsRepo.listBetween(startIso, endIso)
-  );
+  handle(IPC.PUBLICATIONS.LIST_BETWEEN, (startIso: string, endIso: string) => {
+    const [start, end] = validateDateRange(startIso, endIso);
+    return publicationsRepo.listBetween(start, end);
+  });
 
   handle(IPC.PUBLICATIONS.LIST_HISTORIQUE, (filtre: HistoriqueFiltre) =>
-    publicationsRepo.listHistorique(filtre)
+    publicationsRepo.listHistorique(validateHistoryFilter(filtre))
   );
 
-  handle(IPC.PUBLICATIONS.GET, (id: string) => publicationsRepo.getById(id));
+  handle(IPC.PUBLICATIONS.GET, (id: string) => publicationsRepo.getById(validateId(id)));
 
-  handle(IPC.PUBLICATIONS.CREATE, (input: NouvellePublication) => publicationsRepo.create(input));
+  handle(IPC.PUBLICATIONS.CREATE, (input: NouvellePublication) => {
+    const valid = validatePublication(input);
+    if (!accountsRepo.getById(valid.compteId)) throw new Error('Compte introuvable.');
+    return publicationsRepo.create(valid);
+  });
 
-  handle(IPC.PUBLICATIONS.UPDATE, (id: string, input: NouvellePublication) =>
-    publicationsRepo.update(id, input)
-  );
+  handle(IPC.PUBLICATIONS.UPDATE, (id: string, input: NouvellePublication) => {
+    const valid = validatePublication(input);
+    if (!accountsRepo.getById(valid.compteId)) throw new Error('Compte introuvable.');
+    return publicationsRepo.update(validateId(id), valid);
+  });
 
   handle(IPC.PUBLICATIONS.REMOVE, (id: string) => {
-    publicationsRepo.remove(id);
+    publicationsRepo.remove(validateId(id));
   });
 
   handle(IPC.PUBLICATIONS.MARK_PUBLISHED, (id: string) =>
-    publicationsRepo.setStatut(id, 'publie', { publishedAt: new Date().toISOString() })
+    publicationsRepo.setStatut(validateId(id), 'publie', { publishedAt: new Date().toISOString() })
   );
 
-  handle(IPC.PUBLICATIONS.CANCEL, (id: string) => publicationsRepo.setStatut(id, 'annule'));
+  handle(IPC.PUBLICATIONS.CANCEL, (id: string) => publicationsRepo.setStatut(validateId(id), 'annule'));
 }

@@ -1,6 +1,6 @@
 {
   "name": "tiktok-manager",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Planification et programmation de vidéos et stories TikTok",
   "author": "TikTok Manager",
   "private": true,
@@ -10,6 +10,7 @@
     "build:renderer": "vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
     "build": "npm run build:renderer && npm run build:electron",
+    "test": "npm run build:electron && node --test tests/*.test.cjs",
     "dist": "node scripts/generate-icon.mjs && npm run build && electron-builder --win nsis"
   },
   "dependencies": {

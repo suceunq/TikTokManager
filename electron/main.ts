@@ -15,6 +15,7 @@ import { isQuitting, setQuitting } from './appState';
 import { AppUpdater } from './updater';
 import * as settingsRepo from './db/settings.repo';
 import type { UpdateState } from '../shared/types';
+import { cleanupOrphanMedia } from './media/cleanup';
 
 app.setName('TikTok Manager');
 app.setAppUserModelId('com.tiktokmanager.app');
@@ -103,6 +104,7 @@ app.whenReady().then(() => {
   });
 
   startScheduler(getMainWindow);
+  cleanupOrphanMedia();
 
   // Silent startup check - populates state (and pushes it to the renderer once created) without
   // downloading anything automatically.
