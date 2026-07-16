@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { getStore, persist } from './store';
 import type { HistoriqueFiltre, NouvellePublication, Publication } from '../../shared/types';
 import type { StatutPublication } from '../../shared/types';
+import { cleanupPublicationMedia } from '../media/cleanup';
+import { resetForReschedule } from '../publication-state';
 
 function sortByScheduledAtAsc(a: Publication, b: Publication): number {
   return a.scheduledAt.localeCompare(b.scheduledAt);
@@ -36,7 +38,7 @@ export function listHistorique(filtre: HistoriqueFiltre): Publication[] {
     rows = rows.filter((p) => p.scheduledAt >= filtre.dateDebut!);
   }
   if (filtre.dateFin) {
-    rows = rows.filter((p) => p.scheduledAt <= filtre.dateFin!);
+    rows = rows.filter((p) => p.scheduledAt < filtre.dateFin!);
   }
 
   return rows.sort((a, b) => b.scheduledAt.localeCompare(a.scheduledAt));
@@ -99,6 +101,9 @@ export function update(id: string, input: NouvellePublication): Publication {
     (p) => p.id !== id && p.statut !== 'annule' && p.compteId === input.compteId && p.scheduledAt === input.scheduledAt
   );
   if (duplicate) throw new Error('Une autre publication utilise déjà ce créneau pour ce compte.');
+  const previousVideoPath = publication.videoPath;
+  const previousThumbnailPath = publication.thumbnailPath;
+  resetForReschedule(publication, input.scheduledAt);
   publication.compteId = input.compteId;
   publication.type = input.type;
   publication.titre = input.titre;
@@ -110,6 +115,7 @@ export function update(id: string, input: NouvellePublication): Publication {
   publication.reminderLeadMinutes = input.reminderLeadMinutes;
   publication.updatedAt = new Date().toISOString();
   persist();
+  cleanupPublicationMedia(previousVideoPath, previousThumbnailPath);
   return publication;
 }
 
@@ -134,6 +140,8 @@ export function markPreReminderSent(id: string): void {
 
 export function remove(id: string): void {
   const store = getStore();
+  const removed = store.publications.find((p) => p.id === id);
   store.publications = store.publications.filter((p) => p.id !== id);
   persist();
+  if (removed) cleanupPublicationMedia(removed.videoPath, removed.thumbnailPath);
 }

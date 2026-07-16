@@ -31,6 +31,24 @@ function getStorePath(): string {
   return path.join(getUserDataPath(), 'data.json');
 }
 
+function getBackupPath(): string {
+  return path.join(getUserDataPath(), 'data.backup.json');
+}
+
+function normalizeStore(value: unknown): StoreShape {
+  if (!value || typeof value !== 'object') throw new Error('Format de données invalide.');
+  const parsed = value as Partial<StoreShape>;
+  if (parsed.comptes !== undefined && !Array.isArray(parsed.comptes)) throw new Error('Liste des comptes invalide.');
+  if (parsed.publications !== undefined && !Array.isArray(parsed.publications)) throw new Error('Liste des publications invalide.');
+  if (parsed.settings !== undefined && (!parsed.settings || typeof parsed.settings !== 'object')) throw new Error('Paramètres invalides.');
+  return {
+    schemaVersion: typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1,
+    comptes: parsed.comptes ?? [],
+    publications: parsed.publications ?? [],
+    settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+  };
+}
+
 let cache: StoreShape | null = null;
 
 function load(): StoreShape {
@@ -45,17 +63,22 @@ function load(): StoreShape {
 
   try {
     const raw = fs.readFileSync(storePath, 'utf-8');
-    const parsed = JSON.parse(raw) as Partial<StoreShape>;
-    cache = {
-      schemaVersion: parsed.schemaVersion ?? 1,
-      comptes: parsed.comptes ?? [],
-      publications: parsed.publications ?? [],
-      settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
-    };
+    cache = normalizeStore(JSON.parse(raw));
   } catch (err) {
-    console.error('[store] Fichier de données corrompu, réinitialisation:', err);
-    cache = defaultStore();
-    save(cache);
+    console.error('[store] Fichier principal illisible, tentative de restauration:', err);
+    try {
+      cache = normalizeStore(JSON.parse(fs.readFileSync(getBackupPath(), 'utf-8')));
+      const corruptPath = `${storePath}.corrupt-${Date.now()}`;
+      fs.renameSync(storePath, corruptPath);
+      save(cache);
+      console.warn(`[store] Données restaurées depuis la sauvegarde. Fichier conservé: ${corruptPath}`);
+    } catch (backupError) {
+      const corruptPath = `${storePath}.corrupt-${Date.now()}`;
+      try { fs.renameSync(storePath, corruptPath); } catch { /* Conserver autant que possible. */ }
+      console.error('[store] Sauvegarde également illisible, création d’un magasin vide:', backupError);
+      cache = defaultStore();
+      save(cache);
+    }
   }
 
   return cache;
@@ -65,6 +88,9 @@ function save(data: StoreShape): void {
   const storePath = getStorePath();
   const tmpPath = `${storePath}.tmp`;
   fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+  if (fs.existsSync(storePath)) {
+    fs.copyFileSync(storePath, getBackupPath());
+  }
   fs.renameSync(tmpPath, storePath);
 }
 

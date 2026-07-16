@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { getStore, persist } from './store';
 import type { Compte, NouveauCompte } from '../../shared/types';
+import { cleanupPublicationMedia } from '../media/cleanup';
 
 export function list(): Compte[] {
   return [...getStore().comptes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
@@ -43,7 +44,9 @@ export function countPublicationsForAccount(id: string): number {
 
 export function remove(id: string): void {
   const store = getStore();
+  const removed = store.publications.filter((p) => p.compteId === id);
   store.comptes = store.comptes.filter((c) => c.id !== id);
   store.publications = store.publications.filter((p) => p.compteId !== id);
   persist();
+  for (const publication of removed) cleanupPublicationMedia(publication.videoPath, publication.thumbnailPath);
 }

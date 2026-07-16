@@ -18,18 +18,28 @@ export default function HistoriquePage() {
   const [dateFin, setDateFin] = useState('');
   const [rows, setRows] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<Publication | null>(null);
 
   const load = async () => {
-    setLoading(true);
-    const data = await listHistorique({
-      compteId: compteId || undefined,
-      statut: statut || undefined,
-      dateDebut: dateDebut ? new Date(dateDebut).toISOString() : undefined,
-      dateFin: dateFin ? new Date(dateFin).toISOString() : undefined,
-    });
-    setRows(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+      const endExclusive = dateFin ? new Date(`${dateFin}T00:00:00`) : null;
+      if (endExclusive) endExclusive.setDate(endExclusive.getDate() + 1);
+      const data = await listHistorique({
+        compteId: compteId || undefined,
+        statut: statut || undefined,
+        dateDebut: dateDebut ? new Date(`${dateDebut}T00:00:00`).toISOString() : undefined,
+        dateFin: endExclusive?.toISOString(),
+      });
+      setRows(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -99,6 +109,7 @@ export default function HistoriquePage() {
         </div>
 
         {loading && <div className="loading-state">Chargement...</div>}
+        {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
         {!loading && rows.length === 0 && (
           <div className="empty-state">

@@ -11,10 +11,6 @@ export function getUserDataPath(): string {
   return app.getPath('userData');
 }
 
-export function getDbPath(): string {
-  return path.join(getUserDataPath(), 'tiktok-manager.db');
-}
-
 export function getVideosDir(): string {
   return ensureDir(path.join(getUserDataPath(), 'videos'));
 }

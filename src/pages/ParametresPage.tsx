@@ -25,6 +25,7 @@ export default function ParametresPage() {
   const [startOnLogin, setStartOnLogin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -37,17 +38,17 @@ export default function ParametresPage() {
   }, [settings]);
 
   const handleSave = async () => {
-    setSaving(true);
-    await update({
-      reminderLeadMinutesDefault: reminderLead,
-      notificationsEnabled,
-      preReminderEnabled,
-      launchMinimizedToTray,
-      startOnLogin,
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      setSaving(true);
+      setError(null);
+      await update({ reminderLeadMinutesDefault: reminderLead, notificationsEnabled, preReminderEnabled, launchMinimizedToTray, startOnLogin });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -64,6 +65,7 @@ export default function ParametresPage() {
       </div>
 
       <div className="card" style={{ maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {error && <p style={{ color: 'var(--color-danger)', margin: 0 }}>{error}</p>}
         <div className="field">
           <label htmlFor="reminderLead">Délai de rappel par défaut (minutes avant la publication)</label>
           <input
