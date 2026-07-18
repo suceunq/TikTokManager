@@ -10,6 +10,8 @@ import UpdateDialog from './components/UpdateDialog';
 import AboutDialog from './components/AboutDialog';
 import FeedbackDialog from './components/FeedbackDialog';
 import { I18nProvider, useI18n } from './context/I18nContext';
+import { WelcomeProvider } from './context/WelcomeContext';
+import WelcomeDialog from './components/WelcomeDialog';
 
 function ApplicationShell() {
   const { t } = useI18n();
@@ -35,6 +37,7 @@ function ApplicationShell() {
       <UpdateDialog open={updateOpen} onClose={() => setUpdateOpen(false)} />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
       <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <WelcomeDialog />
     </div>
   );
 }
@@ -57,9 +60,9 @@ export default function App() {
 
   return (
     <SettingsProvider>
-      <I18nProvider><AccountsProvider>
+      <I18nProvider><WelcomeProvider><AccountsProvider>
           <PublicationsProvider><UpdateProvider><ApplicationShell /></UpdateProvider></PublicationsProvider>
-      </AccountsProvider></I18nProvider>
+      </AccountsProvider></WelcomeProvider></I18nProvider>
     </SettingsProvider>
   );
 }

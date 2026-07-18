@@ -5,6 +5,7 @@ import { formatReleaseNotes } from '../lib/releaseNotes';
 import Button from '../components/Button';
 import { SUPPORTED_LOCALES, type LanguagePreference } from '@shared/i18n';
 import { useI18n } from '../context/I18nContext';
+import { useWelcome } from '../context/WelcomeContext';
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -21,12 +22,15 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 export default function ParametresPage() {
   const { t } = useI18n();
   const { settings, loading, update } = useSettings();
+  const { showWelcome } = useWelcome();
   const [reminderLead, setReminderLead] = useState(15);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [preReminderEnabled, setPreReminderEnabled] = useState(true);
   const [launchMinimizedToTray, setLaunchMinimizedToTray] = useState(false);
   const [startOnLogin, setStartOnLogin] = useState(false);
   const [language, setLanguage] = useState<LanguagePreference>('system');
+  const [showWelcomeOnStartup, setShowWelcomeOnStartup] = useState(true);
+  const [donationUrl, setDonationUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +43,8 @@ export default function ParametresPage() {
       setLaunchMinimizedToTray(settings.launchMinimizedToTray);
       setStartOnLogin(settings.startOnLogin);
       setLanguage(settings.language);
+      setShowWelcomeOnStartup(settings.showWelcomeOnStartup);
+      setDonationUrl(settings.donationUrl);
     }
   }, [settings]);
 
@@ -46,7 +52,7 @@ export default function ParametresPage() {
     try {
       setSaving(true);
       setError(null);
-      await update({ reminderLeadMinutesDefault: reminderLead, notificationsEnabled, preReminderEnabled, launchMinimizedToTray, startOnLogin, language });
+      await update({ reminderLeadMinutesDefault: reminderLead, notificationsEnabled, preReminderEnabled, launchMinimizedToTray, startOnLogin, language, showWelcomeOnStartup, donationUrl: donationUrl.trim() });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -91,6 +97,13 @@ export default function ParametresPage() {
             {saving ? t('common.saving') : saved ? t('settings.saved') : t('settings.save')}
           </Button>
         </div>
+      </div>
+
+      <div className="card" style={{ maxWidth: 520, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div><h2 style={{ margin: 0, fontSize: 16 }}>{t('settings.welcomeTitle')}</h2><p className="hint">{t('settings.welcomeDescription')}</p></div>
+        <Toggle checked={showWelcomeOnStartup} onChange={setShowWelcomeOnStartup} label={t('settings.showWelcome')} />
+        <div className="field" style={{ marginBottom: 0 }}><label htmlFor="donationUrl">{t('settings.donationUrl')}</label><input id="donationUrl" type="url" className="input" value={donationUrl} onChange={(event) => setDonationUrl(event.target.value)} placeholder={t('settings.donationPlaceholder')} /><span className="hint">{t('settings.donationHint')}</span></div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><Button onClick={handleSave} disabled={saving}>{saving ? t('common.saving') : saved ? t('settings.saved') : t('common.save')}</Button><Button variant="secondary" onClick={showWelcome}>{t('settings.previewWelcome')}</Button></div>
       </div>
 
       <UpdateSection />

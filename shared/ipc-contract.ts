@@ -25,6 +25,7 @@ export const IPC = {
   },
   SHELL: {
     OPEN_TIKTOK_UPLOAD: 'shell:openTiktokUpload',
+    OPEN_DONATION: 'shell:openDonation',
   },
   UPDATE: {
     STATE: 'update:state',

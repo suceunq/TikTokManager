@@ -6,7 +6,7 @@ const IPC = {
   PUBLICATIONS: { LIST: 'publications:list', LIST_BETWEEN: 'publications:listBetween', LIST_HISTORIQUE: 'publications:listHistorique', GET: 'publications:get', CREATE: 'publications:create', UPDATE: 'publications:update', REMOVE: 'publications:remove', MARK_PUBLISHED: 'publications:markPublished', CANCEL: 'publications:cancel' },
   SETTINGS: { GET: 'settings:get', UPDATE: 'settings:update' },
   FILES: { IMPORT_VIDEO: 'files:importVideo' },
-  SHELL: { OPEN_TIKTOK_UPLOAD: 'shell:openTiktokUpload' },
+  SHELL: { OPEN_TIKTOK_UPLOAD: 'shell:openTiktokUpload', OPEN_DONATION: 'shell:openDonation' },
   UPDATE: { STATE: 'update:state', CHECK: 'update:check', DOWNLOAD: 'update:download', INSTALL: 'update:install', STATE_CHANGED: 'update:stateChanged' },
   NOTIFICATIONS: { NAVIGATE: 'notification:navigate' },
   APP: { NAVIGATE: 'app:navigate' },
@@ -57,6 +57,7 @@ const api = {
   },
   shell: {
     openTiktokUpload: () => invoke<void>(IPC.SHELL.OPEN_TIKTOK_UPLOAD),
+    openDonation: (url: string) => invoke<void>(IPC.SHELL.OPEN_DONATION, url),
   },
   update: {
     getState: () => invoke<UpdateState>(IPC.UPDATE.STATE),
