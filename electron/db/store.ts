@@ -21,6 +21,8 @@ const DEFAULT_SETTINGS: Settings = {
   launchMinimizedToTray: false,
   startOnLogin: false,
   language: 'system',
+  showWelcomeOnStartup: true,
+  donationUrl: '',
 };
 
 function defaultStore(): StoreShape {
