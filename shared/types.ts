@@ -55,7 +55,6 @@ export interface Settings {
   startOnLogin: boolean;
   language: import('./i18n').LanguagePreference;
   showWelcomeOnStartup: boolean;
-  donationUrl: string;
 }
 
 export interface HistoriqueFiltre {

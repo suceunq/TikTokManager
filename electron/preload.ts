@@ -57,7 +57,7 @@ const api = {
   },
   shell: {
     openTiktokUpload: () => invoke<void>(IPC.SHELL.OPEN_TIKTOK_UPLOAD),
-    openDonation: (url: string) => invoke<void>(IPC.SHELL.OPEN_DONATION, url),
+    openDonation: () => invoke<void>(IPC.SHELL.OPEN_DONATION),
   },
   update: {
     getState: () => invoke<UpdateState>(IPC.UPDATE.STATE),

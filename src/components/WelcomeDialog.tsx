@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../context/I18nContext';
-import { useSettings } from '../context/SettingsContext';
 import { useWelcome } from '../context/WelcomeContext';
 import { api, unwrap } from '../lib/ipc';
 import Button from './Button';
 
 export default function WelcomeDialog() {
   const { t } = useI18n();
-  const { settings } = useSettings();
   const { open, dismissWelcome } = useWelcome();
   const [neverShowAgain, setNeverShowAgain] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -25,14 +23,11 @@ export default function WelcomeDialog() {
   }, [open, neverShowAgain, dismissWelcome]);
 
   if (!open) return null;
-  const donationUrl = settings?.donationUrl.trim() ?? '';
-
   const donate = async () => {
-    if (!donationUrl) return;
     try {
       setOpening(true);
       setError(null);
-      await unwrap(api.shell.openDonation(donationUrl));
+      await unwrap(api.shell.openDonation());
     } catch (err) {
       setError(err instanceof Error ? err.message : t('welcome.openError'));
     } finally {
@@ -54,12 +49,11 @@ export default function WelcomeDialog() {
           <span className="welcome-heart" aria-hidden="true">♥</span>
           <div><strong>{t('welcome.thanks')}</strong><p>{t('welcome.support')}</p></div>
         </div>
-        {!donationUrl && <p className="welcome-config-hint">{t('welcome.configureHint')}</p>}
         {error && <p className="form-error">{error}</p>}
         <label className="welcome-checkbox"><input type="checkbox" checked={neverShowAgain} onChange={(event) => setNeverShowAgain(event.target.checked)} /> <span>{t('welcome.dontShow')}</span></label>
         <div className="welcome-actions">
           <Button variant="secondary" onClick={close}>{t('welcome.later')}</Button>
-          <Button className="welcome-donate" disabled={!donationUrl || opening} onClick={() => void donate()}><span aria-hidden="true">♥</span>{t('welcome.donate')}</Button>
+          <Button className="welcome-donate" disabled={opening} onClick={() => void donate()}><span aria-hidden="true">♥</span>{t('welcome.donate')}</Button>
         </div>
       </section>
     </div>
