@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import AppRoutes from './router';
@@ -18,9 +18,22 @@ function ApplicationShell() {
   const { state, acknowledgeInstalled } = useUpdate();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [updateToastVisible, setUpdateToastVisible] = useState(false);
+  const updateToastShown = useRef(false);
+
+  // Bref rappel auto-disparaissant au debut du telechargement en arriere-plan - l'installation
+  // elle-meme reste entierement silencieuse, ceci indique juste qu'une activite est en cours.
+  useEffect(() => {
+    if (state?.phase !== 'downloading' || updateToastShown.current) return;
+    updateToastShown.current = true;
+    setUpdateToastVisible(true);
+    const timer = setTimeout(() => setUpdateToastVisible(false), 3000);
+    return () => clearTimeout(timer);
+  }, [state?.phase]);
 
   return (
     <div className="app-shell">
+      {updateToastVisible && <div className="update-toast" role="status">{t('update.downloadingToast')}</div>}
       <Sidebar onAbout={() => setAboutOpen(true)} onFeedback={() => setFeedbackOpen(true)} />
       <main className="main-area">
       <AppRoutes />
