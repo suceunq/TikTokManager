@@ -4,6 +4,7 @@ import { getUserDataPath } from '../paths';
 import type { Compte, Publication, Settings } from '../../shared/types';
 import { app } from 'electron';
 import { resolveLocale, translate, type TranslationKey } from '../../shared/i18n';
+import { DEFAULT_DONATION_URL } from '../../shared/app-config';
 
 const systemText = (key: TranslationKey) => translate(resolveLocale('system', app.getLocale()), key);
 
@@ -22,7 +23,7 @@ const DEFAULT_SETTINGS: Settings = {
   startOnLogin: false,
   language: 'system',
   showWelcomeOnStartup: true,
-  donationUrl: '',
+  donationUrl: DEFAULT_DONATION_URL,
 };
 
 function defaultStore(): StoreShape {
