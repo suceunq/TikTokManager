@@ -4,7 +4,6 @@ import type { HistoriqueFiltre, NouveauCompte, NouvellePublication, Settings } f
 import { getVideosDir, getThumbnailsDir } from './paths';
 import { SUPPORTED_LOCALES } from '../shared/i18n';
 import { t } from './i18n';
-import { isOfficialPayPalUrl } from '../shared/donation';
 
 function requiredText(value: unknown, label: string, max: number): string {
   if (typeof value !== 'string' || !value.trim()) throw new Error(t('validation.required', { label }));
@@ -52,7 +51,7 @@ export function validatePublication(input: NouvellePublication): NouvellePublica
 }
 
 export function validateSettings(partial: Partial<Settings>): Partial<Settings> {
-  const allowed = new Set(['reminderLeadMinutesDefault', 'notificationsEnabled', 'preReminderEnabled', 'launchMinimizedToTray', 'startOnLogin', 'language', 'showWelcomeOnStartup', 'donationUrl']);
+  const allowed = new Set(['reminderLeadMinutesDefault', 'notificationsEnabled', 'preReminderEnabled', 'launchMinimizedToTray', 'startOnLogin', 'language', 'showWelcomeOnStartup']);
   if (!partial || Object.keys(partial).some((key) => !allowed.has(key))) throw new Error(t('validation.settings'));
   if (partial.reminderLeadMinutesDefault !== undefined && (!Number.isFinite(partial.reminderLeadMinutesDefault) || partial.reminderLeadMinutesDefault < 0 || partial.reminderLeadMinutesDefault > 10080)) {
     throw new Error(t('validation.defaultReminder'));
@@ -61,10 +60,6 @@ export function validateSettings(partial: Partial<Settings>): Partial<Settings> 
     if (partial[key] !== undefined && typeof partial[key] !== 'boolean') throw new Error(t('validation.boolean'));
   }
   if (partial.language !== undefined && partial.language !== 'system' && !SUPPORTED_LOCALES.includes(partial.language)) throw new Error(t('validation.language'));
-  if (partial.donationUrl !== undefined) {
-    if (typeof partial.donationUrl !== 'string' || partial.donationUrl.length > 500) throw new Error(t('donation.invalidUrl'));
-    if (partial.donationUrl && !isOfficialPayPalUrl(partial.donationUrl)) throw new Error(t('donation.invalidUrl'));
-  }
   return partial;
 }
 

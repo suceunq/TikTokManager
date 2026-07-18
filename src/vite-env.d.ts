@@ -38,7 +38,7 @@ export interface TikTokManagerApi {
   };
   shell: {
     openTiktokUpload: () => Promise<ApiResult<void>>;
-    openDonation: (url: string) => Promise<ApiResult<void>>;
+    openDonation: () => Promise<ApiResult<void>>;
   };
   onNotificationNavigate: (callback: (publicationId: string) => void) => () => void;
   onAppNavigate: (callback: (route: string) => void) => () => void;

@@ -30,7 +30,6 @@ export default function ParametresPage() {
   const [startOnLogin, setStartOnLogin] = useState(false);
   const [language, setLanguage] = useState<LanguagePreference>('system');
   const [showWelcomeOnStartup, setShowWelcomeOnStartup] = useState(true);
-  const [donationUrl, setDonationUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +43,6 @@ export default function ParametresPage() {
       setStartOnLogin(settings.startOnLogin);
       setLanguage(settings.language);
       setShowWelcomeOnStartup(settings.showWelcomeOnStartup);
-      setDonationUrl(settings.donationUrl);
     }
   }, [settings]);
 
@@ -52,7 +50,7 @@ export default function ParametresPage() {
     try {
       setSaving(true);
       setError(null);
-      await update({ reminderLeadMinutesDefault: reminderLead, notificationsEnabled, preReminderEnabled, launchMinimizedToTray, startOnLogin, language, showWelcomeOnStartup, donationUrl: donationUrl.trim() });
+      await update({ reminderLeadMinutesDefault: reminderLead, notificationsEnabled, preReminderEnabled, launchMinimizedToTray, startOnLogin, language, showWelcomeOnStartup });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -60,6 +58,14 @@ export default function ParametresPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleWelcomeVisibility = (value: boolean) => {
+    setShowWelcomeOnStartup(value);
+    void update({ showWelcomeOnStartup: value }).catch((err) => {
+      setShowWelcomeOnStartup(!value);
+      setError(err instanceof Error ? err.message : String(err));
+    });
   };
 
   if (loading) {
@@ -101,9 +107,8 @@ export default function ParametresPage() {
 
       <div className="card" style={{ maxWidth: 520, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div><h2 style={{ margin: 0, fontSize: 16 }}>{t('settings.welcomeTitle')}</h2><p className="hint">{t('settings.welcomeDescription')}</p></div>
-        <Toggle checked={showWelcomeOnStartup} onChange={setShowWelcomeOnStartup} label={t('settings.showWelcome')} />
-        <div className="field" style={{ marginBottom: 0 }}><label htmlFor="donationUrl">{t('settings.donationUrl')}</label><input id="donationUrl" type="url" className="input" value={donationUrl} onChange={(event) => setDonationUrl(event.target.value)} placeholder={t('settings.donationPlaceholder')} /><span className="hint">{t('settings.donationHint')}</span></div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><Button onClick={handleSave} disabled={saving}>{saving ? t('common.saving') : saved ? t('settings.saved') : t('common.save')}</Button><Button variant="secondary" onClick={showWelcome}>{t('settings.previewWelcome')}</Button></div>
+        <Toggle checked={showWelcomeOnStartup} onChange={handleWelcomeVisibility} label={t('settings.showWelcome')} />
+        <div><Button variant="secondary" onClick={showWelcome}>{t('settings.previewWelcome')}</Button></div>
       </div>
 
       <UpdateSection />
