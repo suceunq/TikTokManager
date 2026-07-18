@@ -2,6 +2,7 @@ import { app } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import type { UpdateInfo } from 'builder-util-runtime';
 import type { UpdateState } from '../shared/types';
+import { t } from './i18n';
 
 function extractReleaseNotes(info: UpdateInfo): string | null {
   if (typeof info.releaseNotes === 'string') return info.releaseNotes;
@@ -71,7 +72,7 @@ export class AppUpdater {
 
   async check(): Promise<UpdateState> {
     if (!app.isPackaged) {
-      this.setState({ phase: 'unavailable-dev', errorMessage: 'Vérification indisponible en mode développement.' });
+      this.setState({ phase: 'unavailable-dev', errorMessage: t('update.devError') });
       return this.getState();
     }
     try {

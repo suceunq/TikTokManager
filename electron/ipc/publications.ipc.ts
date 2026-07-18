@@ -4,6 +4,7 @@ import * as publicationsRepo from '../db/publications.repo';
 import { handle } from './helpers';
 import * as accountsRepo from '../db/accounts.repo';
 import { validateDateRange, validateHistoryFilter, validateId, validatePublication } from '../validation';
+import { t } from '../i18n';
 
 export function registerPublicationsIpc(): void {
   handle(IPC.PUBLICATIONS.LIST, () => publicationsRepo.list());
@@ -21,13 +22,13 @@ export function registerPublicationsIpc(): void {
 
   handle(IPC.PUBLICATIONS.CREATE, (input: NouvellePublication) => {
     const valid = validatePublication(input);
-    if (!accountsRepo.getById(valid.compteId)) throw new Error('Compte introuvable.');
+    if (!accountsRepo.getById(valid.compteId)) throw new Error(t('validation.accountMissing'));
     return publicationsRepo.create(valid);
   });
 
   handle(IPC.PUBLICATIONS.UPDATE, (id: string, input: NouvellePublication) => {
     const valid = validatePublication(input);
-    if (!accountsRepo.getById(valid.compteId)) throw new Error('Compte introuvable.');
+    if (!accountsRepo.getById(valid.compteId)) throw new Error(t('validation.accountMissing'));
     return publicationsRepo.update(validateId(id), valid);
   });
 

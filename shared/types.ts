@@ -53,6 +53,7 @@ export interface Settings {
   preReminderEnabled: boolean;
   launchMinimizedToTray: boolean;
   startOnLogin: boolean;
+  language: import('./i18n').LanguagePreference;
 }
 
 export interface HistoriqueFiltre {

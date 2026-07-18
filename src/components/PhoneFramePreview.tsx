@@ -4,7 +4,8 @@ import Button from './Button';
 import Badge from './Badge';
 import { toAppMediaUrl } from '../lib/mediaUrl';
 import { formatDateLong } from '../lib/dateUtils';
-import { STATUT_COLORS, STATUT_LABELS, TYPE_LABELS } from '../lib/statusLabels';
+import { STATUT_COLORS, STATUT_KEYS, TYPE_KEYS } from '../lib/statusLabels';
+import { useI18n } from '../context/I18nContext';
 
 interface PhoneFramePreviewProps {
   publication: Publication;
@@ -23,11 +24,12 @@ export default function PhoneFramePreview({
   onMarkPublished,
   onCancel,
 }: PhoneFramePreviewProps) {
+  const { t, locale } = useI18n();
   const videoUrl = toAppMediaUrl(publication.videoPath);
   const canPublish = publication.statut === 'planifie' || publication.statut === 'rappel_envoye';
 
   return (
-    <Modal title="Aperçu de la publication" onClose={onClose} wide>
+    <Modal title={t('preview.title')} onClose={onClose} wide>
       <div className="phone-frame-wrapper">
         <div className="phone-frame">
           <div className="phone-frame-screen">
@@ -35,10 +37,10 @@ export default function PhoneFramePreview({
               <video src={videoUrl} controls />
             ) : (
               <div style={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                Vidéo indisponible
+                {t('preview.videoUnavailable')}
               </div>
             )}
-            <div className="phone-overlay-top">{TYPE_LABELS[publication.type]}</div>
+            <div className="phone-overlay-top">{t(TYPE_KEYS[publication.type])}</div>
             <div className="phone-overlay-bottom">
               <div className="phone-account-row">
                 <span
@@ -50,7 +52,7 @@ export default function PhoneFramePreview({
                     display: 'inline-block',
                   }}
                 />
-                {compte ? compte.pseudoTiktok : 'Compte inconnu'}
+                {compte ? compte.pseudoTiktok : t('preview.unknownAccount')}
               </div>
               <div className="phone-caption">{publication.titre}</div>
               {publication.hashtags.length > 0 && (
@@ -67,33 +69,33 @@ export default function PhoneFramePreview({
 
         <div className="preview-panel">
           <div className="preview-meta-row">
-            <Badge label={STATUT_LABELS[publication.statut]} color={STATUT_COLORS[publication.statut]} />
+            <Badge label={t(STATUT_KEYS[publication.statut])} color={STATUT_COLORS[publication.statut]} />
             <span className="page-subtitle" style={{ marginTop: 0 }}>
-              {formatDateLong(publication.scheduledAt)}
+              {formatDateLong(publication.scheduledAt, locale)}
             </span>
           </div>
 
           <div>
-            <strong>Description</strong>
+            <strong>{t('preview.description')}</strong>
             <p style={{ marginTop: 4, color: 'var(--color-text-muted)' }}>
-              {publication.description || 'Aucune description.'}
+              {publication.description || t('preview.noDescription')}
             </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {canPublish && (
               <Button variant="primary" onClick={onPublish}>
-                Publier sur TikTok
+                {t('preview.publish')}
               </Button>
             )}
             {canPublish && (
               <Button variant="secondary" onClick={onMarkPublished}>
-                Marquer comme publié
+                {t('preview.markPublished')}
               </Button>
             )}
             {canPublish && onCancel && (
               <Button variant="danger" onClick={onCancel}>
-                Annuler la publication
+                {t('preview.cancel')}
               </Button>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { app, Menu, type MenuItemConstructorOptions, type BrowserWindow } from 'electron';
 import { IPC } from '../shared/ipc-contract';
 import type { AppUpdater } from './updater';
+import { t } from './i18n';
 
 /** Builds the native app menu, entirely in French to match the rest of the UI. Uses Electron's
  * standard roles for every item so shortcuts/behavior stay native - only the visible labels change.
@@ -20,47 +21,37 @@ export function buildAppMenu(getMainWindow: () => BrowserWindow | null, appUpdat
 
   const template: MenuItemConstructorOptions[] = [
     {
-      label: 'Fichier',
-      submenu: [{ role: 'quit', label: 'Quitter' }],
+      label: t('menu.file'), submenu: [{ role: 'quit', label: t('menu.quit') }],
     },
     {
-      label: 'Édition',
+      label: t('menu.edit'),
       submenu: [
-        { role: 'undo', label: 'Annuler' },
-        { role: 'redo', label: 'Rétablir' },
+        { role: 'undo', label: t('menu.undo') }, { role: 'redo', label: t('menu.redo') },
         { type: 'separator' },
-        { role: 'cut', label: 'Couper' },
-        { role: 'copy', label: 'Copier' },
-        { role: 'paste', label: 'Coller' },
-        { role: 'delete', label: 'Supprimer' },
+        { role: 'cut', label: t('menu.cut') }, { role: 'copy', label: t('menu.copy') }, { role: 'paste', label: t('menu.paste') }, { role: 'delete', label: t('menu.delete') },
         { type: 'separator' },
-        { role: 'selectAll', label: 'Tout sélectionner' },
+        { role: 'selectAll', label: t('menu.selectAll') },
       ],
     },
     {
-      label: 'Affichage',
+      label: t('menu.view'),
       submenu: [
-        { role: 'reload', label: 'Recharger' },
-        { role: 'forceReload', label: 'Forcer le rechargement' },
-        ...(app.isPackaged ? [] : [{ role: 'toggleDevTools', label: 'Outils de développement' } as MenuItemConstructorOptions]),
+        { role: 'reload', label: t('menu.reload') }, { role: 'forceReload', label: t('menu.forceReload') },
+        ...(app.isPackaged ? [] : [{ role: 'toggleDevTools', label: t('menu.devTools') } as MenuItemConstructorOptions]),
         { type: 'separator' },
-        { role: 'resetZoom', label: 'Taille réelle' },
-        { role: 'zoomIn', label: 'Zoom avant' },
-        { role: 'zoomOut', label: 'Zoom arrière' },
+        { role: 'resetZoom', label: t('menu.actualSize') }, { role: 'zoomIn', label: t('menu.zoomIn') }, { role: 'zoomOut', label: t('menu.zoomOut') },
         { type: 'separator' },
-        { role: 'togglefullscreen', label: 'Plein écran' },
+        { role: 'togglefullscreen', label: t('menu.fullscreen') },
       ],
     },
     {
-      label: 'Fenêtre',
+      label: t('menu.window'),
       submenu: [
-        { role: 'minimize', label: 'Réduire' },
-        { role: 'close', label: 'Fermer' },
+        { role: 'minimize', label: t('menu.minimize') }, { role: 'close', label: t('menu.close') },
       ],
     },
     {
-      label: 'Aide',
-      submenu: [{ label: 'Rechercher une mise à jour', click: checkForUpdates }],
+      label: t('menu.help'), submenu: [{ label: t('menu.checkUpdate'), click: checkForUpdates }],
     },
   ];
 

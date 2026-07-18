@@ -1,4 +1,5 @@
 import { toAppMediaUrl } from '../lib/mediaUrl';
+import { useI18n } from '../context/I18nContext';
 
 interface VideoThumbnailProps {
   thumbnailPath: string | null;
@@ -7,12 +8,13 @@ interface VideoThumbnailProps {
 }
 
 export default function VideoThumbnail({ thumbnailPath, alt, className }: VideoThumbnailProps) {
+  const { t } = useI18n();
   const url = toAppMediaUrl(thumbnailPath);
   const classes = ['thumb-sm', className].filter(Boolean).join(' ');
 
   if (!url) {
     return (
-      <div className={classes} title="Miniature indisponible">
+      <div className={classes} title={t('thumbnail.unavailable')}>
         🎬
       </div>
     );

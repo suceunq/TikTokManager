@@ -4,6 +4,7 @@ import type { HistoriqueFiltre, NouvellePublication, Publication } from '../../s
 import type { StatutPublication } from '../../shared/types';
 import { cleanupPublicationMedia } from '../media/cleanup';
 import { resetForReschedule } from '../publication-state';
+import { t } from '../i18n';
 
 function sortByScheduledAtAsc(a: Publication, b: Publication): number {
   return a.scheduledAt.localeCompare(b.scheduledAt);
@@ -69,7 +70,7 @@ export function create(input: NouvellePublication): Publication {
   const duplicate = getStore().publications.find(
     (p) => p.statut !== 'annule' && p.compteId === input.compteId && p.scheduledAt === input.scheduledAt
   );
-  if (duplicate) throw new Error('Une publication est déjà programmée pour ce compte à cette date et cette heure.');
+  if (duplicate) throw new Error(t('validation.duplicate'));
   const now = new Date().toISOString();
   const publication: Publication = {
     id: randomUUID(),
@@ -96,11 +97,11 @@ export function create(input: NouvellePublication): Publication {
 export function update(id: string, input: NouvellePublication): Publication {
   const store = getStore();
   const publication = store.publications.find((p) => p.id === id);
-  if (!publication) throw new Error('Publication introuvable');
+  if (!publication) throw new Error(t('validation.publicationMissing'));
   const duplicate = store.publications.find(
     (p) => p.id !== id && p.statut !== 'annule' && p.compteId === input.compteId && p.scheduledAt === input.scheduledAt
   );
-  if (duplicate) throw new Error('Une autre publication utilise déjà ce créneau pour ce compte.');
+  if (duplicate) throw new Error(t('validation.duplicateOther'));
   const previousVideoPath = publication.videoPath;
   const previousThumbnailPath = publication.thumbnailPath;
   resetForReschedule(publication, input.scheduledAt);
@@ -122,7 +123,7 @@ export function update(id: string, input: NouvellePublication): Publication {
 export function setStatut(id: string, statut: StatutPublication, extra?: { publishedAt?: string }): Publication {
   const store = getStore();
   const publication = store.publications.find((p) => p.id === id);
-  if (!publication) throw new Error('Publication introuvable');
+  if (!publication) throw new Error(t('validation.publicationMissing'));
   publication.statut = statut;
   if (extra?.publishedAt) publication.publishedAt = extra.publishedAt;
   publication.updatedAt = new Date().toISOString();

@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { useI18n } from '../context/I18nContext';
 
 interface ModalProps {
   title: string;
@@ -9,6 +10,7 @@ interface ModalProps {
 }
 
 export default function Modal({ title, onClose, children, actions, wide = false }: ModalProps) {
+  const { t } = useI18n();
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -22,7 +24,7 @@ export default function Modal({ title, onClose, children, actions, wide = false 
       <div className={`modal${wide ? ' modal-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Fermer">
+          <button className="modal-close" onClick={onClose} aria-label={t('common.close')}>
             ✕
           </button>
         </div>

@@ -9,6 +9,7 @@ import { toDateInputValue, toTimeInputValue, combineDateAndTime } from '../lib/d
 import Button from '../components/Button';
 import TagInput from '../components/TagInput';
 import VideoThumbnail from '../components/VideoThumbnail';
+import { useI18n } from '../context/I18nContext';
 
 function nowPlusMinutes(minutes: number): { date: string; time: string } {
   const d = new Date(Date.now() + minutes * 60_000);
@@ -17,6 +18,7 @@ function nowPlusMinutes(minutes: number): { date: string; time: string } {
 }
 
 export default function PlanificationFormPage() {
+  const { t } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -87,15 +89,15 @@ export default function PlanificationFormPage() {
 
   const handleSave = async () => {
     if (!compteId) {
-      setError('Sélectionnez un compte.');
+      setError(t('planning.selectAccount'));
       return;
     }
     if (!videoPath) {
-      setError('Importez une vidéo.');
+      setError(t('planning.importRequired'));
       return;
     }
     if (!titre.trim()) {
-      setError('Le titre est obligatoire.');
+      setError(t('planning.titleRequired'));
       return;
     }
 
@@ -136,21 +138,20 @@ export default function PlanificationFormPage() {
 
   const videoUrl = toAppMediaUrl(videoPath);
   const suggestions = [
-    `Tu savais ça ? ${titre || 'Voici une astuce'} — regarde jusqu’à la fin 👀`,
-    `${titre || 'Nouveau contenu'} : 3 points à retenir. Le dernier est le plus important.`,
-    `J’ai testé ${titre || 'cette méthode'} pour toi. Voici le résultat sans détour.`,
+    t('planning.suggestion1', { title: titre || t('planning.suggestionFallback') }),
+    t('planning.suggestion2', { title: titre || t('planning.suggestionContent') }),
+    t('planning.suggestion3', { title: titre || t('planning.suggestionMethod') }),
   ];
 
   if (accounts.length === 0) {
     return (
       <div>
         <div className="page-header">
-          <h1 className="page-title">Planifier une publication</h1>
+          <h1 className="page-title">{t('planning.titleNew')}</h1>
         </div>
         <div className="empty-state card">
           <div className="icon">👤</div>
-          <p>Créez d'abord un compte dans la page "Comptes" avant de planifier une publication.</p>
-          <Button onClick={() => navigate('/comptes')}>Aller aux comptes</Button>
+          <p>{t('planning.noAccount')}</p><Button onClick={() => navigate('/comptes')}>{t('planning.goAccounts')}</Button>
         </div>
       </div>
     );
@@ -160,8 +161,7 @@ export default function PlanificationFormPage() {
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">{isEditing ? 'Modifier la publication' : 'Nouvelle publication'}</h1>
-          <p className="page-subtitle">Importez une vidéo, complétez les informations et planifiez la date de publication.</p>
+          <h1 className="page-title">{isEditing ? t('planning.titleEdit') : t('planning.titleNew')}</h1><p className="page-subtitle">{t('planning.subtitle')}</p>
         </div>
       </div>
 
@@ -169,37 +169,36 @@ export default function PlanificationFormPage() {
         {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
         <div className="field">
-          <label>Vidéo</label>
+          <label>{t('planning.video')}</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {videoUrl ? (
               <video src={videoUrl} style={{ width: 120, height: 160, objectFit: 'cover', borderRadius: 8, background: '#000' }} muted />
             ) : (
-              <VideoThumbnail thumbnailPath={null} alt="Aucune vidéo" className="thumb-sm" />
+              <VideoThumbnail thumbnailPath={null} alt={t('planning.noVideo')} className="thumb-sm" />
             )}
             <Button variant="secondary" onClick={handleImport} disabled={importing}>
-              {importing ? 'Import en cours...' : videoPath ? 'Changer la vidéo' : 'Importer une vidéo'}
+              {importing ? t('planning.importing') : videoPath ? t('planning.changeVideo') : t('planning.import')}
             </Button>
           </div>
         </div>
 
         {validation && (
           <div className={`video-readiness ${validation.ready ? 'is-ready' : 'has-warnings'}`}>
-            <strong>{validation.ready ? '✓ Vidéo prête à publier' : '⚠ Vérifications recommandées'}</strong>
-            <span>{validation.width ?? '?'} × {validation.height ?? '?'} · {validation.durationSeconds?.toFixed(1) ?? '?'} s · {(validation.sizeBytes / 1048576).toFixed(1)} Mo</span>
+            <strong>{validation.ready ? t('planning.ready') : t('planning.checks')}</strong>
+            <span>{validation.width ?? '?'} × {validation.height ?? '?'} · {validation.durationSeconds?.toFixed(1) ?? '?'} s · {(validation.sizeBytes / 1048576).toFixed(1)} MB</span>
             {validation.warnings.map((warning) => <span key={warning}>• {warning}</span>)}
           </div>
         )}
 
         <div className="form-row">
           <div className="field">
-            <label htmlFor="type">Type de contenu</label>
+            <label htmlFor="type">{t('planning.contentType')}</label>
             <select id="type" className="select" value={type} onChange={(e) => setType(e.target.value as TypeContenu)}>
-              <option value="video">Vidéo</option>
-              <option value="story">Story</option>
+              <option value="video">{t('type.video')}</option><option value="story">{t('type.story')}</option>
             </select>
           </div>
           <div className="field">
-            <label htmlFor="compte">Compte</label>
+            <label htmlFor="compte">{t('planning.account')}</label>
             <select id="compte" className="select" value={compteId} onChange={(e) => setCompteId(e.target.value)}>
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -211,46 +210,45 @@ export default function PlanificationFormPage() {
         </div>
 
         <div className="field">
-          <label htmlFor="titre">Titre</label>
-          <input id="titre" className="input" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Titre de la vidéo" />
+          <label htmlFor="titre">{t('planning.title')}</label><input id="titre" className="input" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder={t('planning.titlePlaceholder')} />
         </div>
 
         <div className="field">
-          <label htmlFor="description">Description / légende</label>
+          <label htmlFor="description">{t('planning.description')}</label>
           <textarea
             id="description"
             className="textarea"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Décrivez votre contenu..."
+            placeholder={t('planning.descriptionPlaceholder')}
           />
           <div className="content-assistant">
-            <strong>Assistant éditorial local</strong>
+            <strong>{t('planning.assistant')}</strong>
             {suggestions.map((suggestion) => (
               <button key={suggestion} type="button" onClick={() => setDescription(suggestion)}>{suggestion}</button>
             ))}
-            <button type="button" onClick={() => setHashtags(Array.from(new Set([...hashtags, 'tiktokfr', 'astuce', 'pourtoi'])))}>+ Hashtags suggérés</button>
+            <button type="button" onClick={() => setHashtags(Array.from(new Set([...hashtags, 'tiktok', 'tips', 'foryou'])))}>{t('planning.suggestHashtags')}</button>
           </div>
         </div>
 
         <div className="field">
-          <label>Hashtags</label>
+          <label>{t('planning.hashtags')}</label>
           <TagInput value={hashtags} onChange={setHashtags} />
         </div>
 
         <div className="form-row">
           <div className="field">
-            <label htmlFor="date">Date de publication</label>
+            <label htmlFor="date">{t('planning.date')}</label>
             <input id="date" type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="time">Heure de publication</label>
+            <label htmlFor="time">{t('planning.time')}</label>
             <input id="time" type="time" className="input" value={time} onChange={(e) => setTime(e.target.value)} />
           </div>
         </div>
 
         <div className="field">
-          <label htmlFor="reminder">Rappel personnalisé (minutes avant, optionnel)</label>
+          <label htmlFor="reminder">{t('planning.customReminder')}</label>
           <input
             id="reminder"
             type="number"
@@ -258,21 +256,21 @@ export default function PlanificationFormPage() {
             className="input"
             value={reminderLeadMinutes}
             onChange={(e) => setReminderLeadMinutes(e.target.value)}
-            placeholder="Utiliser le délai par défaut des paramètres"
+            placeholder={t('planning.reminderPlaceholder')}
           />
         </div>
 
         <div className="modal-actions" style={{ marginTop: 8 }}>
           {isEditing && (
             <Button variant="danger" onClick={handleCancelPublication} disabled={saving}>
-              Annuler la publication
+              {t('planning.cancelPublication')}
             </Button>
           )}
           <Button variant="secondary" onClick={() => navigate(-1)} disabled={saving}>
-            Retour
+            {t('common.back')}
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       </div>

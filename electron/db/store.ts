@@ -2,6 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getUserDataPath } from '../paths';
 import type { Compte, Publication, Settings } from '../../shared/types';
+import { app } from 'electron';
+import { resolveLocale, translate, type TranslationKey } from '../../shared/i18n';
+
+const systemText = (key: TranslationKey) => translate(resolveLocale('system', app.getLocale()), key);
 
 export interface StoreShape {
   schemaVersion: number;
@@ -16,6 +20,7 @@ const DEFAULT_SETTINGS: Settings = {
   preReminderEnabled: true,
   launchMinimizedToTray: false,
   startOnLogin: false,
+  language: 'system',
 };
 
 function defaultStore(): StoreShape {
@@ -36,11 +41,11 @@ function getBackupPath(): string {
 }
 
 function normalizeStore(value: unknown): StoreShape {
-  if (!value || typeof value !== 'object') throw new Error('Format de données invalide.');
+  if (!value || typeof value !== 'object') throw new Error(systemText('store.invalid'));
   const parsed = value as Partial<StoreShape>;
-  if (parsed.comptes !== undefined && !Array.isArray(parsed.comptes)) throw new Error('Liste des comptes invalide.');
-  if (parsed.publications !== undefined && !Array.isArray(parsed.publications)) throw new Error('Liste des publications invalide.');
-  if (parsed.settings !== undefined && (!parsed.settings || typeof parsed.settings !== 'object')) throw new Error('Paramètres invalides.');
+  if (parsed.comptes !== undefined && !Array.isArray(parsed.comptes)) throw new Error(systemText('store.accountsInvalid'));
+  if (parsed.publications !== undefined && !Array.isArray(parsed.publications)) throw new Error(systemText('store.publicationsInvalid'));
+  if (parsed.settings !== undefined && (!parsed.settings || typeof parsed.settings !== 'object')) throw new Error(systemText('store.settingsInvalid'));
   return {
     schemaVersion: typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1,
     comptes: parsed.comptes ?? [],

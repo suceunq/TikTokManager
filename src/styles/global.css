@@ -91,6 +91,7 @@ a {
   text-decoration: none;
   font-weight: 500;
   transition: background 0.15s ease, color 0.15s ease;
+  line-height: 1.25;
 }
 
 .sidebar-link:hover {
@@ -785,7 +786,7 @@ a {
 .release-notes { max-height: 210px; overflow: auto; white-space: pre-wrap; font: 13px/1.5 inherit; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; }
 .update-progress { height: 8px; overflow: hidden; border-radius: 4px; background: var(--color-border); }
 .update-progress span { display: block; height: 100%; background: var(--color-primary); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
 .about-footer { border-top: 1px solid var(--color-border); padding-top: 12px; }
 
 .video-readiness {

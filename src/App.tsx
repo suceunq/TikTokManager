@@ -9,8 +9,10 @@ import { UpdateProvider, useUpdate } from './context/UpdateContext';
 import UpdateDialog from './components/UpdateDialog';
 import AboutDialog from './components/AboutDialog';
 import FeedbackDialog from './components/FeedbackDialog';
+import { I18nProvider, useI18n } from './context/I18nContext';
 
 function ApplicationShell() {
+  const { t } = useI18n();
   const { state } = useUpdate();
   const [updateOpen, setUpdateOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -24,9 +26,9 @@ function ApplicationShell() {
       <main className="main-area">
       {(state?.phase === 'available' || state?.phase === 'ready') && <button className="update-banner" onClick={() => setUpdateOpen(true)}>
       {state?.phase === 'ready'
-        ? `Mise à jour ${state.availableVersion} prête à installer`
-        : `Mise à jour ${state.availableVersion} disponible`}
-      <span className="update-banner-link">Voir les détails</span>
+        ? t('update.bannerReady', { version: state.availableVersion ?? '' })
+        : t('update.bannerAvailable', { version: state.availableVersion ?? '' })}
+      <span className="update-banner-link">{t('update.details')}</span>
       </button>}
       <AppRoutes />
       </main>
@@ -55,13 +57,9 @@ export default function App() {
 
   return (
     <SettingsProvider>
-      <AccountsProvider>
-        <PublicationsProvider>
-          <UpdateProvider>
-            <ApplicationShell />
-          </UpdateProvider>
-        </PublicationsProvider>
-      </AccountsProvider>
+      <I18nProvider><AccountsProvider>
+          <PublicationsProvider><UpdateProvider><ApplicationShell /></UpdateProvider></PublicationsProvider>
+      </AccountsProvider></I18nProvider>
     </SettingsProvider>
   );
 }
