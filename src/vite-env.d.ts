@@ -5,6 +5,7 @@ import type {
   Compte,
   HistoriqueFiltre,
   ImportVideoResult,
+  UpdateState,
   NouveauCompte,
   NouvellePublication,
   Publication,
@@ -40,6 +41,12 @@ export interface TikTokManagerApi {
     openTiktokUpload: () => Promise<ApiResult<void>>;
     openDonation: () => Promise<ApiResult<void>>;
   };
+  update: {
+    getState: () => Promise<ApiResult<UpdateState>>;
+    check: () => Promise<ApiResult<UpdateState>>;
+    acknowledgeInstalled: () => Promise<ApiResult<void>>;
+  };
+  onUpdateStateChanged: (callback: (state: UpdateState) => void) => () => void;
   onNotificationNavigate: (callback: (publicationId: string) => void) => () => void;
   onAppNavigate: (callback: (route: string) => void) => () => void;
 }

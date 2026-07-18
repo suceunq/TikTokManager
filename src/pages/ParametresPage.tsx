@@ -118,7 +118,7 @@ export default function ParametresPage() {
 
 function UpdateSection() {
   const { t } = useI18n();
-  const { state, check, download, install } = useUpdate();
+  const { state, check } = useUpdate();
   const phase = state?.phase ?? 'idle';
 
   return (
@@ -132,6 +132,8 @@ function UpdateSection() {
         )}
       </div>
 
+      <p className="hint">{t('settings.automaticUpdates')}</p>
+
       {phase === 'unavailable-dev' && (
         <p className="hint">{t('settings.devUnavailable')}</p>
       )}
@@ -143,9 +145,6 @@ function UpdateSection() {
           {state?.releaseNotes && (
             <pre style={{ maxHeight: 128, overflowY: 'auto', fontSize: 12, whiteSpace: 'pre-wrap', margin: 0 }}>{formatReleaseNotes(state.releaseNotes)}</pre>
           )}
-          <div>
-            <Button onClick={() => void download()}>{t('common.download')}</Button>
-          </div>
         </div>
       )}
 
@@ -166,13 +165,16 @@ function UpdateSection() {
         </div>
       )}
 
-      {phase === 'ready' && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>{t('settings.ready', { version: state?.availableVersion ?? '' })}</span><Button onClick={() => void install()}>{t('common.installRestart')}</Button>
+      {phase === 'preparing' && <p className="hint">{t('settings.preparingUpdate')}</p>}
+      {phase === 'installing' && <p className="hint">{t('settings.installingUpdate')}</p>}
+      {phase === 'retrying' && <p className="hint">{t('settings.retryingUpdate')}</p>}
+
+      {phase === 'error' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <p style={{ color: 'var(--color-danger)' }}>{state?.errorMessage ?? t('settings.updateError')}</p>
+          <p className="hint">{t('settings.updateErrorAutomatic')}</p>
         </div>
       )}
-
-      {phase === 'error' && <p style={{ color: 'var(--color-danger)' }}>{state?.errorMessage ?? t('settings.updateError')}</p>}
     </div>
   );
 }

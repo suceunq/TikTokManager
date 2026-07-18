@@ -93,9 +93,18 @@ export type UpdatePhase =
   | 'available'
   | 'unavailable'
   | 'downloading'
-  | 'ready'
+  | 'preparing'
+  | 'installing'
+  | 'retrying'
   | 'error'
   | 'unavailable-dev';
+
+export interface InstalledReleaseInfo {
+  version: string;
+  previousVersion: string;
+  releaseNotes: string | null;
+  installedAt: string;
+}
 
 export interface UpdateState {
   phase: UpdatePhase;
@@ -106,4 +115,7 @@ export interface UpdateState {
   bytesPerSecond?: number | null;
   secondsRemaining?: number | null;
   errorMessage: string | null;
+  automatic: boolean;
+  nextCheckAt: string | null;
+  installedRelease: InstalledReleaseInfo | null;
 }

@@ -30,8 +30,7 @@ export const IPC = {
   UPDATE: {
     STATE: 'update:state',
     CHECK: 'update:check',
-    DOWNLOAD: 'update:download',
-    INSTALL: 'update:install',
+    ACK_INSTALLED: 'update:ackInstalled',
     STATE_CHANGED: 'update:stateChanged',
   },
   NOTIFICATIONS: {

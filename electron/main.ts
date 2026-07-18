@@ -108,10 +108,6 @@ app.whenReady().then(() => {
   startScheduler(getMainWindow);
   cleanupOrphanMedia();
 
-  // Silent startup check - populates state (and pushes it to the renderer once created) without
-  // downloading anything automatically.
-  void appUpdater.check();
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow(false);
