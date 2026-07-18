@@ -7,7 +7,7 @@ const IPC = {
   SETTINGS: { GET: 'settings:get', UPDATE: 'settings:update' },
   FILES: { IMPORT_VIDEO: 'files:importVideo' },
   SHELL: { OPEN_TIKTOK_UPLOAD: 'shell:openTiktokUpload', OPEN_DONATION: 'shell:openDonation' },
-  UPDATE: { STATE: 'update:state', CHECK: 'update:check', DOWNLOAD: 'update:download', INSTALL: 'update:install', STATE_CHANGED: 'update:stateChanged' },
+  UPDATE: { STATE: 'update:state', CHECK: 'update:check', ACK_INSTALLED: 'update:ackInstalled', STATE_CHANGED: 'update:stateChanged' },
   NOTIFICATIONS: { NAVIGATE: 'notification:navigate' },
   APP: { NAVIGATE: 'app:navigate' },
 } as const;
@@ -62,8 +62,7 @@ const api = {
   update: {
     getState: () => invoke<UpdateState>(IPC.UPDATE.STATE),
     check: () => invoke<UpdateState>(IPC.UPDATE.CHECK),
-    download: () => invoke<void>(IPC.UPDATE.DOWNLOAD),
-    install: () => invoke<void>(IPC.UPDATE.INSTALL),
+    acknowledgeInstalled: () => invoke<void>(IPC.UPDATE.ACK_INSTALLED),
   },
   onUpdateStateChanged: (callback: (state: UpdateState) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, state: UpdateState) => callback(state);

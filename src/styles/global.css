@@ -789,6 +789,25 @@ a {
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
 .about-footer { border-top: 1px solid var(--color-border); padding-top: 12px; }
 
+.installed-release { position: fixed; z-index: 1100; top: 22px; right: 22px; width: 410px; max-width: calc(100vw - 32px); max-height: calc(100vh - 44px); overflow: hidden; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); color: var(--color-text); box-shadow: 0 20px 60px rgba(0,0,0,.45); animation: installed-release-in .28s ease-out; }
+.installed-release-accent { height: 4px; background: linear-gradient(90deg, var(--color-primary), #35dfa1); }
+.installed-release header { display: grid; grid-template-columns: 42px 1fr 28px; gap: 12px; align-items: center; padding: 18px 18px 10px; }
+.installed-release-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; color: #06251b; background: #35dfa1; font-size: 22px; font-weight: 800; }
+.installed-release-badge { color: #35dfa1; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.installed-release h2 { margin: 3px 0 0; font-size: 17px; }
+.installed-release-close { align-self: start; border: 0; background: transparent; color: var(--color-text-muted); cursor: pointer; font-size: 15px; }
+.installed-release-subtitle { margin: 0; padding: 0 18px 12px; color: var(--color-text-muted); font-size: 13px; }
+.installed-release-notes { max-height: 280px; overflow-y: auto; margin: 0 18px; padding: 14px; border-radius: 10px; background: var(--color-bg); font-size: 13px; line-height: 1.5; }
+.installed-release-notes h3 { margin: 10px 0 6px; font-size: 14px; }
+.installed-release-notes h3:first-child { margin-top: 0; }
+.installed-release-notes > p { margin: 6px 0; color: var(--color-text-muted); }
+.installed-release-bullet { display: grid; grid-template-columns: 18px 1fr; gap: 7px; margin: 7px 0; }
+.installed-release-bullet span { color: #35dfa1; font-weight: 800; }
+.installed-release-bullet p { margin: 0; }
+.installed-release-empty { margin: 0 18px; color: var(--color-text-muted); }
+.installed-release-ok { float: right; margin: 14px 18px 18px; }
+@keyframes installed-release-in { from { opacity: 0; transform: translateY(-12px) scale(.98); } to { opacity: 1; transform: none; } }
+
 .video-readiness {
   display: flex;
   flex-direction: column;

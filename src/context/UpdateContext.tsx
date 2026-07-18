@@ -5,8 +5,7 @@ import { api, unwrap } from '../lib/ipc';
 interface UpdateContextValue {
   state: UpdateState | null;
   check: () => Promise<void>;
-  download: () => Promise<void>;
-  install: () => Promise<void>;
+  acknowledgeInstalled: () => Promise<void>;
 }
 
 const UpdateContext = createContext<UpdateContextValue | null>(null);
@@ -22,12 +21,9 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
     setState(await unwrap(api.update.check()));
   }, []);
 
-  const download = useCallback(async () => {
-    await unwrap(api.update.download());
-  }, []);
-
-  const install = useCallback(async () => {
-    await unwrap(api.update.install());
+  const acknowledgeInstalled = useCallback(async () => {
+    await unwrap(api.update.acknowledgeInstalled());
+    setState((current) => current ? { ...current, installedRelease: null } : current);
   }, []);
 
   useEffect(() => {
@@ -35,7 +31,7 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
     return window.api.onUpdateStateChanged(setState);
   }, [refresh]);
 
-  return <UpdateContext.Provider value={{ state, check, download, install }}>{children}</UpdateContext.Provider>;
+  return <UpdateContext.Provider value={{ state, check, acknowledgeInstalled }}>{children}</UpdateContext.Provider>;
 }
 
 export function useUpdate(): UpdateContextValue {
