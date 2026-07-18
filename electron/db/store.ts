@@ -4,7 +4,7 @@ import { getUserDataPath } from '../paths';
 import type { Compte, Publication, Settings } from '../../shared/types';
 import { app } from 'electron';
 import { resolveLocale, translate, type TranslationKey } from '../../shared/i18n';
-import { DEFAULT_DONATION_URL } from '../../shared/app-config';
+import { DEFAULT_DONATION_URL, migrateDonationUrl } from '../../shared/app-config';
 
 const systemText = (key: TranslationKey) => translate(resolveLocale('system', app.getLocale()), key);
 
@@ -49,11 +49,13 @@ function normalizeStore(value: unknown): StoreShape {
   if (parsed.comptes !== undefined && !Array.isArray(parsed.comptes)) throw new Error(systemText('store.accountsInvalid'));
   if (parsed.publications !== undefined && !Array.isArray(parsed.publications)) throw new Error(systemText('store.publicationsInvalid'));
   if (parsed.settings !== undefined && (!parsed.settings || typeof parsed.settings !== 'object')) throw new Error(systemText('store.settingsInvalid'));
+  const settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
+  settings.donationUrl = migrateDonationUrl(parsed.settings?.donationUrl);
   return {
     schemaVersion: typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1,
     comptes: parsed.comptes ?? [],
     publications: parsed.publications ?? [],
-    settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+    settings,
   };
 }
 
