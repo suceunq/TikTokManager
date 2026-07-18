@@ -13,8 +13,9 @@ test('accepte uniquement les liens HTTPS officiels PayPal', () => {
 test('le lien par défaut cible le compte marchand en euros', () => {
   assert.equal(isOfficialPayPalUrl(DEFAULT_DONATION_URL), true);
   const url = new URL(DEFAULT_DONATION_URL);
-  assert.equal(url.pathname, '/cgi-bin/webscr');
-  assert.equal(url.searchParams.get('cmd'), '_donations');
-  assert.equal(url.searchParams.get('business'), 'X6TNHGN5K7QA');
+  assert.equal(url.pathname, '/donate/');
+  assert.equal(url.searchParams.get('business'), 'X65TNHGN5K7QA');
+  assert.equal(url.searchParams.get('business').length, 13);
+  assert.equal(url.searchParams.get('no_recurring'), '0');
   assert.equal(url.searchParams.get('currency_code'), 'EUR');
 });
