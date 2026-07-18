@@ -2,6 +2,7 @@ import { BrowserWindow } from 'electron';
 import * as publicationsRepo from '../db/publications.repo';
 import * as settingsRepo from '../db/settings.repo';
 import { notify } from './notifier';
+import { t } from '../i18n';
 
 const TICK_INTERVAL_MS = 30_000;
 const STALE_GRACE_HOURS = 24;
@@ -24,8 +25,7 @@ function tick(getMainWindow: () => BrowserWindow | null): void {
         Math.round((new Date(pub.scheduledAt).getTime() - now.getTime()) / 60000)
       );
       notify(
-        'Rappel de publication',
-        `"${pub.titre}" est prévu dans ${minutesLeft} min.`,
+        t('notification.reminderTitle'), t('notification.reminderBody', { title: pub.titre, minutes: minutesLeft }),
         pub.id,
         getMainWindow
       );
@@ -37,8 +37,7 @@ function tick(getMainWindow: () => BrowserWindow | null): void {
   for (const pub of due) {
     if (pub.statut === 'planifie') {
       notify(
-        "C'est l'heure de publier !",
-        `"${pub.titre}" est planifié maintenant.`,
+        t('notification.dueTitle'), t('notification.dueBody', { title: pub.titre }),
         pub.id,
         getMainWindow
       );

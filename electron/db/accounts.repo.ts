@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { getStore, persist } from './store';
 import type { Compte, NouveauCompte } from '../../shared/types';
 import { cleanupPublicationMedia } from '../media/cleanup';
+import { getLocale, t } from '../i18n';
 
 export function list(): Compte[] {
-  return [...getStore().comptes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
+  return [...getStore().comptes].sort((a, b) => a.nom.localeCompare(b.nom, getLocale(), { sensitivity: 'base' }));
 }
 
 export function getById(id: string): Compte | null {
@@ -29,7 +30,7 @@ export function create(input: NouveauCompte): Compte {
 export function update(id: string, input: NouveauCompte): Compte {
   const store = getStore();
   const compte = store.comptes.find((c) => c.id === id);
-  if (!compte) throw new Error('Compte introuvable');
+  if (!compte) throw new Error(t('validation.accountMissing'));
   compte.nom = input.nom;
   compte.pseudoTiktok = input.pseudoTiktok;
   compte.couleur = input.couleur;

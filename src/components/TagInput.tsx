@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
+import { useI18n } from '../context/I18nContext';
 
 interface TagInputProps {
   value: string[];
@@ -13,6 +14,7 @@ function normalizeHashtag(raw: string): string {
 }
 
 export default function TagInput({ value, onChange, placeholder }: TagInputProps) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState('');
 
   const addTag = () => {
@@ -41,7 +43,7 @@ export default function TagInput({ value, onChange, placeholder }: TagInputProps
       {value.map((tag) => (
         <span className="tag-chip" key={tag}>
           {tag}
-          <button type="button" onClick={() => removeTag(tag)} aria-label={`Retirer ${tag}`}>
+          <button type="button" onClick={() => removeTag(tag)} aria-label={t('tag.remove', { tag })}>
             ✕
           </button>
         </span>
@@ -51,7 +53,7 @@ export default function TagInput({ value, onChange, placeholder }: TagInputProps
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
         onBlur={addTag}
-        placeholder={placeholder ?? 'Ajouter un hashtag et appuyer sur Entrée'}
+        placeholder={placeholder ?? t('tag.placeholder')}
       />
     </div>
   );

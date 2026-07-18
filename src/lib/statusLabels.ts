@@ -1,12 +1,7 @@
 import type { StatutPublication, TypeContenu } from '@shared/types';
+import type { TranslationKey } from '@shared/i18n';
 
-export const STATUT_LABELS: Record<StatutPublication, string> = {
-  planifie: 'Planifié',
-  rappel_envoye: 'Rappel envoyé',
-  publie: 'Publié',
-  manque: 'Manqué',
-  annule: 'Annulé',
-};
+export const STATUT_KEYS: Record<StatutPublication, TranslationKey> = { planifie: 'status.scheduled', rappel_envoye: 'status.reminderSent', publie: 'status.published', manque: 'status.missed', annule: 'status.cancelled' };
 
 export const STATUT_COLORS: Record<StatutPublication, string> = {
   planifie: '#3B82F6',
@@ -16,7 +11,4 @@ export const STATUT_COLORS: Record<StatutPublication, string> = {
   annule: '#6B7280',
 };
 
-export const TYPE_LABELS: Record<TypeContenu, string> = {
-  video: 'Vidéo',
-  story: 'Story',
-};
+export const TYPE_KEYS: Record<TypeContenu, TranslationKey> = { video: 'type.video', story: 'type.story' };

@@ -7,14 +7,15 @@ import type { ImportVideoResult } from '../../shared/types';
 import { getVideosDir, getThumbnailsDir } from '../paths';
 import { generateThumbnail, inspectVideo } from '../media/ffmpeg';
 import { handle } from './helpers';
+import { t } from '../i18n';
 
 export function registerFilesIpc(getMainWindow: () => BrowserWindow | null): void {
   handle(IPC.FILES.IMPORT_VIDEO, async (): Promise<ImportVideoResult | null> => {
     const win = getMainWindow();
     const dialogOptions: Electron.OpenDialogOptions = {
-      title: 'Importer une vidéo',
+      title: t('dialog.importVideo'),
       properties: ['openFile'],
-      filters: [{ name: 'Vidéos', extensions: ['mp4', 'mov', 'webm', 'm4v'] }],
+      filters: [{ name: t('dialog.videos'), extensions: ['mp4', 'mov', 'webm', 'm4v'] }],
     };
     const result = win
       ? await dialog.showOpenDialog(win, dialogOptions)
@@ -29,7 +30,7 @@ export function registerFilesIpc(getMainWindow: () => BrowserWindow | null): voi
     const ext = path.extname(sourcePath) || '.mp4';
     const sourceSize = fs.statSync(sourcePath).size;
     if (sourceSize > 4 * 1024 * 1024 * 1024) {
-      throw new Error('La vidéo dépasse la limite de sécurité de 4 Go.');
+      throw new Error(t('validation.fileTooLarge'));
     }
     const id = randomUUID();
     const destPath = path.join(getVideosDir(), `${id}${ext}`);

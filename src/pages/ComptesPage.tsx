@@ -5,6 +5,7 @@ import { usePublications } from '../context/PublicationsContext';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useI18n } from '../context/I18nContext';
 
 const PRESET_COLORS = ['#FE2C55', '#25F4EE', '#3B82F6', '#22C55E', '#F59E0B', '#A855F7', '#EC4899', '#6B7280'];
 
@@ -17,6 +18,7 @@ function AccountForm({
   onSubmit: (input: NouveauCompte) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const [nom, setNom] = useState(initial?.nom ?? '');
   const [pseudoTiktok, setPseudoTiktok] = useState(initial?.pseudoTiktok ?? '');
   const [couleur, setCouleur] = useState(initial?.couleur ?? PRESET_COLORS[0]);
@@ -25,7 +27,7 @@ function AccountForm({
 
   const handleSubmit = async () => {
     if (!nom.trim() || !pseudoTiktok.trim()) {
-      setError('Le nom et le pseudo TikTok sont obligatoires.');
+      setError(t('accounts.required'));
       return;
     }
     try {
@@ -41,36 +43,36 @@ function AccountForm({
 
   return (
     <Modal
-      title={initial ? 'Modifier le compte' : 'Nouveau compte'}
+      title={initial ? t('accounts.editTitle') : t('accounts.newTitle')}
       onClose={onCancel}
       actions={
         <>
           <Button variant="secondary" onClick={onCancel} disabled={saving}>
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? t('common.saving') : t('common.save')}
           </Button>
         </>
       }
     >
       {error && <p style={{ color: 'var(--color-danger)', marginTop: 0 }}>{error}</p>}
       <div className="field">
-        <label htmlFor="nom">Nom du compte</label>
-        <input id="nom" className="input" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Ex. Compte principal" />
+        <label htmlFor="nom">{t('accounts.name')}</label>
+        <input id="nom" className="input" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('accounts.namePlaceholder')} />
       </div>
       <div className="field">
-        <label htmlFor="pseudo">Pseudo TikTok</label>
+        <label htmlFor="pseudo">{t('accounts.handle')}</label>
         <input
           id="pseudo"
           className="input"
           value={pseudoTiktok}
           onChange={(e) => setPseudoTiktok(e.target.value)}
-          placeholder="@monpseudo"
+          placeholder={t('accounts.handlePlaceholder')}
         />
       </div>
       <div className="field">
-        <label>Couleur</label>
+        <label>{t('accounts.color')}</label>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {PRESET_COLORS.map((c) => (
             <button
@@ -85,7 +87,7 @@ function AccountForm({
                 border: couleur === c ? '3px solid var(--color-text)' : '1px solid var(--color-border)',
                 cursor: 'pointer',
               }}
-              aria-label={`Choisir la couleur ${c}`}
+              aria-label={t('accounts.chooseColor', { color: c })}
             />
           ))}
           <input type="color" value={couleur} onChange={(e) => setCouleur(e.target.value)} style={{ width: 36, height: 28 }} />
@@ -96,6 +98,7 @@ function AccountForm({
 }
 
 export default function ComptesPage() {
+  const { t } = useI18n();
   const { accounts, loading, error, create, update, remove } = useAccounts();
   const { publications } = usePublications();
   const [showForm, setShowForm] = useState(false);
@@ -126,19 +129,19 @@ export default function ComptesPage() {
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Comptes</h1>
-          <p className="page-subtitle">Gérez vos profils TikTok pour organiser vos publications.</p>
+          <h1 className="page-title">{t('accounts.title')}</h1>
+          <p className="page-subtitle">{t('accounts.subtitle')}</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>+ Nouveau compte</Button>
+        <Button onClick={() => setShowForm(true)}>+ {t('accounts.new')}</Button>
       </div>
 
-      {loading && <div className="loading-state">Chargement des comptes...</div>}
+      {loading && <div className="loading-state">{t('accounts.loading')}</div>}
       {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
       {!loading && accounts.length === 0 && (
         <div className="empty-state card">
           <div className="icon">👤</div>
-          <p>Aucun compte pour le moment. Créez votre premier compte pour commencer à planifier.</p>
+          <p>{t('accounts.empty')}</p>
         </div>
       )}
 
@@ -155,13 +158,13 @@ export default function ComptesPage() {
               </div>
             </div>
             <div className="account-meta-row">
-              <span className="account-handle">{publicationCountFor(compte.id)} publication(s)</span>
+              <span className="account-handle">{t('accounts.count', { count: publicationCountFor(compte.id) })}</span>
               <div className="account-actions">
                 <Button variant="ghost" size="sm" onClick={() => setEditing(compte)}>
-                  Modifier
+                  {t('common.edit')}
                 </Button>
                 <Button variant="danger" size="sm" onClick={() => setDeleting(compte)}>
-                  Supprimer
+                  {t('common.delete')}
                 </Button>
               </div>
             </div>
@@ -175,13 +178,13 @@ export default function ComptesPage() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Supprimer le compte"
+          title={t('accounts.deleteTitle')}
           message={
             publicationCountFor(deleting.id) > 0
-              ? `Ce compte a ${publicationCountFor(deleting.id)} publication(s) associée(s). Elles seront également supprimées. Continuer ?`
-              : `Voulez-vous vraiment supprimer le compte "${deleting.nom}" ?`
+              ? t('accounts.deleteWithPublications', { count: publicationCountFor(deleting.id) })
+              : t('accounts.deleteConfirm', { name: deleting.nom })
           }
-          confirmLabel="Supprimer"
+          confirmLabel={t('common.delete')}
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleting(null)}

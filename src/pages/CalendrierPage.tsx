@@ -15,7 +15,6 @@ import {
   subMonths,
   subWeeks,
 } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import type { Publication } from '@shared/types';
 import { useAccounts } from '../context/AccountsContext';
@@ -23,11 +22,14 @@ import { usePublications } from '../context/PublicationsContext';
 import Button from '../components/Button';
 import PhoneFramePreview from '../components/PhoneFramePreview';
 import { api } from '../lib/ipc';
-import { formatMonthYear, formatWeekdayShort } from '../lib/dateUtils';
+import { dateLocales, formatMonthYear, formatWeekdayShort } from '../lib/dateUtils';
+import { useI18n } from '../context/I18nContext';
 
 type ViewMode = 'mois' | 'semaine';
 
 export default function CalendrierPage() {
+  const { t, locale } = useI18n();
+  const dateLocale = dateLocales[locale];
   const navigate = useNavigate();
   const { accounts, getById: getAccountById } = useAccounts();
   const { listBetween, markPublished, cancel, update } = usePublications();
@@ -41,16 +43,16 @@ export default function CalendrierPage() {
   const rangeStart = useMemo(
     () =>
       viewMode === 'mois'
-        ? startOfWeek(startOfMonth(anchorDate), { locale: fr })
-        : startOfWeek(anchorDate, { locale: fr }),
-    [anchorDate, viewMode]
+        ? startOfWeek(startOfMonth(anchorDate), { locale: dateLocale })
+        : startOfWeek(anchorDate, { locale: dateLocale }),
+    [anchorDate, viewMode, dateLocale]
   );
   const rangeEnd = useMemo(
     () =>
       viewMode === 'mois'
-        ? endOfWeek(endOfMonth(anchorDate), { locale: fr })
-        : endOfWeek(anchorDate, { locale: fr }),
-    [anchorDate, viewMode]
+        ? endOfWeek(endOfMonth(anchorDate), { locale: dateLocale })
+        : endOfWeek(anchorDate, { locale: dateLocale }),
+    [anchorDate, viewMode, dateLocale]
   );
 
   const days = useMemo(() => eachDayOfInterval({ start: rangeStart, end: rangeEnd }), [rangeStart, rangeEnd]);
@@ -119,46 +121,46 @@ export default function CalendrierPage() {
   };
 
   const weekdayLabels = useMemo(() => {
-    const weekStart = startOfWeek(new Date(), { locale: fr });
-    return eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }).map((d) => formatWeekdayShort(d));
-  }, []);
+    const weekStart = startOfWeek(new Date(), { locale: dateLocale });
+    return eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }).map((d) => formatWeekdayShort(d, locale));
+  }, [dateLocale, locale]);
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Calendrier</h1>
-          <p className="page-subtitle">Vue d'ensemble de vos publications planifiées.</p>
+          <h1 className="page-title">{t('calendar.title')}</h1>
+          <p className="page-subtitle">{t('calendar.subtitle')}</p>
         </div>
-        <Button onClick={() => navigate('/planification/nouvelle')}>+ Nouvelle publication</Button>
+        <Button onClick={() => navigate('/planification/nouvelle')}>+ {t('nav.newPublication')}</Button>
       </div>
 
       <div className="calendar-toolbar">
         <div className="calendar-toolbar-controls">
           <Button variant="secondary" size="sm" onClick={goPrev}>
-            ← Précédent
+            ← {t('calendar.previous')}
           </Button>
           <span className="calendar-month-label">
-            {viewMode === 'mois' ? formatMonthYear(anchorDate) : `Semaine du ${format(rangeStart, 'd MMM', { locale: fr })}`}
+            {viewMode === 'mois' ? formatMonthYear(anchorDate, locale) : t('calendar.weekOf', { date: format(rangeStart, 'd MMM', { locale: dateLocale }) })}
           </span>
           <Button variant="secondary" size="sm" onClick={goNext}>
-            Suivant →
+            {t('calendar.next')} →
           </Button>
           <Button variant="ghost" size="sm" onClick={goToday}>
-            Aujourd'hui
+            {t('calendar.today')}
           </Button>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <Button variant={viewMode === 'mois' ? 'primary' : 'secondary'} size="sm" onClick={() => setViewMode('mois')}>
-            Mois
+            {t('calendar.month')}
           </Button>
           <Button variant={viewMode === 'semaine' ? 'primary' : 'secondary'} size="sm" onClick={() => setViewMode('semaine')}>
-            Semaine
+            {t('calendar.week')}
           </Button>
         </div>
       </div>
 
-      {loading && <div className="loading-state">Chargement...</div>}
+      {loading && <div className="loading-state">{t('common.loading')}</div>}
       {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
       {!loading && viewMode === 'mois' && (
@@ -210,7 +212,7 @@ export default function CalendrierPage() {
             return (
               <div key={day.toISOString()} className="week-day-column" onClick={() => goToNewPublication(day)} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void movePublication(e.dataTransfer.getData('text/publication-id'), day); }}>
                 <div className="week-day-header">
-                  <span>{formatWeekdayShort(day)}</span>
+                  <span>{formatWeekdayShort(day, locale)}</span>
                   <span>{format(day, 'd')}</span>
                 </div>
                 {dayPublications.map((p) => {

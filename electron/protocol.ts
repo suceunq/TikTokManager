@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { APP_MEDIA_PROTOCOL } from '../shared/ipc-contract';
 import { getVideosDir, getThumbnailsDir } from './paths';
+import { t } from './i18n';
 
 export function registerAppMediaProtocolScheme(): void {
   protocol.registerSchemesAsPrivileged([
@@ -28,7 +29,7 @@ export function registerAppMediaProtocolHandler(): void {
     try {
       absolutePath = decodeURIComponent(encodedPath);
     } catch {
-      return new Response('Chemin invalide', { status: 400 });
+      return new Response(t('protocol.invalidPath'), { status: 400 });
     }
 
     const videosDir = path.resolve(getVideosDir());
@@ -41,7 +42,7 @@ export function registerAppMediaProtocolHandler(): void {
     };
     const isAllowed = isInside(videosDir, resolved) || isInside(thumbnailsDir, resolved);
     if (!isAllowed) {
-      return new Response('Accès refusé', { status: 403 });
+      return new Response(t('protocol.denied'), { status: 403 });
     }
 
     return net.fetch(pathToFileURL(resolved).toString());

@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import ffmpegStaticPath from 'ffmpeg-static';
 import type { ValidationVideo } from '../../shared/types';
+import { t } from '../i18n';
 
 function resolveFfmpegPath(): string {
   if (app.isPackaged) {
@@ -32,11 +33,11 @@ export async function inspectVideo(videoPath: string): Promise<ValidationVideo> 
   const durationSeconds = duration ? Number(duration[1]) * 3600 + Number(duration[2]) * 60 + Number(duration[3]) : null;
   const hasAudio = output.includes('Audio:') ? true : null;
   const warnings: string[] = [];
-  if (width && height && height <= width) warnings.push('La vidéo n’est pas verticale (format 9:16 recommandé).');
-  if (width && height && (width < 720 || height < 1280)) warnings.push('Résolution faible : 1080 × 1920 est recommandé.');
-  if (durationSeconds && durationSeconds > 600) warnings.push('La vidéo dépasse 10 minutes.');
-  if (hasAudio !== true) warnings.push('Aucune piste audio détectée.');
-  if (sizeBytes > 4 * 1024 * 1024 * 1024) warnings.push('Le fichier dépasse 4 Go.');
+  if (width && height && height <= width) warnings.push(t('video.warningVertical'));
+  if (width && height && (width < 720 || height < 1280)) warnings.push(t('video.warningResolution'));
+  if (durationSeconds && durationSeconds > 600) warnings.push(t('video.warningDuration'));
+  if (hasAudio !== true) warnings.push(t('video.warningAudio'));
+  if (sizeBytes > 4 * 1024 * 1024 * 1024) warnings.push(t('video.warningSize'));
   return { width, height, durationSeconds, sizeBytes, hasAudio, ready: warnings.length === 0, warnings };
 }
 

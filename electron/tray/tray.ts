@@ -1,6 +1,7 @@
 import { Tray, Menu, BrowserWindow, app, nativeImage } from 'electron';
 import path from 'node:path';
 import { setQuitting } from '../appState';
+import { t } from '../i18n';
 
 let tray: Tray | null = null;
 
@@ -31,11 +32,10 @@ export function createTray(getMainWindow: () => BrowserWindow | null, onNewPubli
   };
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Ouvrir TikTok Manager', click: showWindow },
-    { label: 'Nouvelle publication', click: () => { showWindow(); onNewPublication(); } },
+    { label: t('tray.open'), click: showWindow }, { label: t('tray.newPublication'), click: () => { showWindow(); onNewPublication(); } },
     { type: 'separator' },
     {
-      label: 'Quitter',
+      label: t('menu.quit'),
       click: () => {
         setQuitting(true);
         app.quit();
@@ -47,4 +47,10 @@ export function createTray(getMainWindow: () => BrowserWindow | null, onNewPubli
   tray.on('click', showWindow);
 
   return tray;
+}
+
+export function refreshTray(getMainWindow: () => BrowserWindow | null, onNewPublication: () => void): void {
+  tray?.destroy();
+  tray = null;
+  createTray(getMainWindow, onNewPublication);
 }

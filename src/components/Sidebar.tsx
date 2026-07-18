@@ -1,14 +1,12 @@
 import { NavLink } from 'react-router-dom';
-
-const links = [
-  { to: '/', label: 'Calendrier', icon: '📅', end: true },
-  { to: '/planification/nouvelle', label: 'Nouvelle publication', icon: '➕', end: true },
-  { to: '/comptes', label: 'Comptes', icon: '👤', end: true },
-  { to: '/historique', label: 'Historique', icon: '🕓', end: true },
-  { to: '/parametres', label: 'Paramètres', icon: '⚙️', end: true },
-];
+import { useI18n } from '../context/I18nContext';
 
 export default function Sidebar({ onAbout, onFeedback }: { onAbout: () => void; onFeedback: () => void }) {
+  const { t } = useI18n();
+  const links = [
+    { to: '/', label: t('nav.calendar'), icon: '📅', end: true }, { to: '/planification/nouvelle', label: t('nav.newPublication'), icon: '➕', end: true },
+    { to: '/comptes', label: t('nav.accounts'), icon: '👤', end: true }, { to: '/historique', label: t('nav.history'), icon: '🕓', end: true }, { to: '/parametres', label: t('nav.settings'), icon: '⚙️', end: true },
+  ];
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -28,7 +26,7 @@ export default function Sidebar({ onAbout, onFeedback }: { onAbout: () => void; 
           </NavLink>
         ))}
       </nav>
-      <div className="sidebar-bottom"><button className="sidebar-about sidebar-feedback" onClick={onFeedback}><span>✉</span><span>Suggestion / Correction</span></button><button className="sidebar-about" onClick={onAbout}><span>ℹ️</span><span>À propos</span></button></div>
+      <div className="sidebar-bottom"><button className="sidebar-about sidebar-feedback" onClick={onFeedback}><span>✉</span><span>{t('nav.feedback')}</span></button><button className="sidebar-about" onClick={onAbout}><span>ℹ️</span><span>{t('nav.about')}</span></button></div>
     </aside>
   );
 }

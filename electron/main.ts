@@ -10,7 +10,7 @@ import { registerPublicationsIpc } from './ipc/publications.ipc';
 import { registerShellIpc } from './ipc/shell.ipc';
 import { registerUpdaterIpc } from './ipc/updater.ipc';
 import { startScheduler, stopScheduler } from './scheduler/scheduler';
-import { createTray } from './tray/tray';
+import { createTray, refreshTray } from './tray/tray';
 import { isQuitting, setQuitting } from './appState';
 import { AppUpdater } from './updater';
 import * as settingsRepo from './db/settings.repo';
@@ -86,7 +86,11 @@ app.whenReady().then(() => {
   registerAppMediaProtocolHandler();
 
   registerAccountsIpc();
-  registerSettingsIpc();
+  const onNewPublication = () => mainWindow?.webContents.send(IPC.APP.NAVIGATE, '/planification/nouvelle');
+  registerSettingsIpc(() => {
+    Menu.setApplicationMenu(buildAppMenu(getMainWindow, appUpdater));
+    refreshTray(getMainWindow, onNewPublication);
+  });
   registerFilesIpc(getMainWindow);
   registerPublicationsIpc();
   registerShellIpc();
@@ -99,9 +103,7 @@ app.whenReady().then(() => {
   applyStartOnLogin(settings.startOnLogin);
   createWindow(settings.launchMinimizedToTray);
 
-  createTray(getMainWindow, () => {
-    mainWindow?.webContents.send(IPC.APP.NAVIGATE, '/planification/nouvelle');
-  });
+  createTray(getMainWindow, onNewPublication);
 
   startScheduler(getMainWindow);
   cleanupOrphanMedia();
