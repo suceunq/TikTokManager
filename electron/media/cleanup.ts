@@ -3,8 +3,16 @@ import path from 'node:path';
 import { getStore } from '../db/store';
 import { getThumbnailsDir, getVideosDir } from '../paths';
 
+function isInsideManagedDirectory(filePath: string): boolean {
+  const resolved = path.resolve(filePath);
+  return [getVideosDir(), getThumbnailsDir()].some((directory) => {
+    const relative = path.relative(path.resolve(directory), resolved);
+    return Boolean(relative) && !relative.startsWith('..') && !path.isAbsolute(relative);
+  });
+}
+
 function removeIfUnused(filePath: string | null): void {
-  if (!filePath) return;
+  if (!filePath || !isInsideManagedDirectory(filePath)) return;
   const used = getStore().publications.some((publication) =>
     publication.videoPath === filePath || publication.thumbnailPath === filePath
   );

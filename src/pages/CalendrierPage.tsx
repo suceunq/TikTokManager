@@ -15,7 +15,6 @@ import {
   subMonths,
   subWeeks,
 } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
 import type { Publication } from '@shared/types';
 import { useAccounts } from '../context/AccountsContext';
 import { usePublications } from '../context/PublicationsContext';
@@ -23,14 +22,16 @@ import Button from '../components/Button';
 import PhoneFramePreview from '../components/PhoneFramePreview';
 import { api } from '../lib/ipc';
 import { dateLocales, formatMonthYear, formatWeekdayShort } from '../lib/dateUtils';
+import { PLATEFORME_ICONS } from '../lib/statusLabels';
 import { useI18n } from '../context/I18nContext';
+import { useRouter } from '../context/RouterContext';
 
 type ViewMode = 'mois' | 'semaine';
 
 export default function CalendrierPage() {
   const { t, locale } = useI18n();
   const dateLocale = dateLocales[locale];
-  const navigate = useNavigate();
+  const { navigate } = useRouter();
   const { accounts, getById: getAccountById } = useAccounts();
   const { listBetween, markPublished, cancel, update } = usePublications();
   const [viewMode, setViewMode] = useState<ViewMode>('mois');
@@ -96,14 +97,17 @@ export default function CalendrierPage() {
     await update(id, {
       compteId: publication.compteId, type: publication.type, titre: publication.titre,
       description: publication.description, hashtags: publication.hashtags, videoPath: publication.videoPath,
-      thumbnailPath: publication.thumbnailPath, scheduledAt: target.toISOString(), reminderLeadMinutes: publication.reminderLeadMinutes,
+      photoPaths: publication.photoPaths, thumbnailPath: publication.thumbnailPath, visibilite: publication.visibilite,
+      scheduledAt: target.toISOString(), reminderLeadMinutes: publication.reminderLeadMinutes,
     });
     await load();
   };
 
   const handlePublish = async () => {
     if (!previewing) return;
-    await api.shell.openTiktokUpload();
+    const compte = getAccountById(previewing.compteId);
+    if (compte?.plateforme === 'youtube') await api.shell.openYoutubeUpload();
+    else await api.shell.openTiktokUpload();
   };
 
   const handleMarkPublished = async () => {
@@ -195,6 +199,7 @@ export default function CalendrierPage() {
                         setPreviewing(p);
                       }}
                     >
+                      {compte && <span className="chip-platform">{PLATEFORME_ICONS[compte.plateforme]}</span>}
                       {format(new Date(p.scheduledAt), 'HH:mm')} · {p.titre}
                     </span>
                   );
@@ -229,6 +234,7 @@ export default function CalendrierPage() {
                         setPreviewing(p);
                       }}
                     >
+                      {compte && <span className="chip-platform">{PLATEFORME_ICONS[compte.plateforme]}</span>}
                       {format(new Date(p.scheduledAt), 'HH:mm')} · {p.titre}
                     </span>
                   );

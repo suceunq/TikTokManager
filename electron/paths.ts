@@ -18,3 +18,7 @@ export function getVideosDir(): string {
 export function getThumbnailsDir(): string {
   return ensureDir(path.join(getUserDataPath(), 'thumbnails'));
 }
+
+export function getPhotosDir(): string {
+  return ensureDir(path.join(getUserDataPath(), 'photos'));
+}

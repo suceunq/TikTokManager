@@ -80,12 +80,18 @@ export function create(input: NouvellePublication): Publication {
     description: input.description,
     hashtags: input.hashtags,
     videoPath: input.videoPath,
+    photoPaths: input.photoPaths ?? [],
     thumbnailPath: input.thumbnailPath,
+    visibilite: input.visibilite ?? null,
     scheduledAt: input.scheduledAt,
     reminderLeadMinutes: input.reminderLeadMinutes,
     preReminderSentAt: null,
     statut: 'planifie',
     publishedAt: null,
+    remoteId: null,
+    remoteUrl: null,
+    lastError: null,
+    attemptCount: 0,
     createdAt: now,
     updatedAt: now,
   };
@@ -111,7 +117,9 @@ export function update(id: string, input: NouvellePublication): Publication {
   publication.description = input.description;
   publication.hashtags = input.hashtags;
   publication.videoPath = input.videoPath;
+  publication.photoPaths = input.photoPaths ?? [];
   publication.thumbnailPath = input.thumbnailPath;
+  publication.visibilite = input.visibilite ?? null;
   publication.scheduledAt = input.scheduledAt;
   publication.reminderLeadMinutes = input.reminderLeadMinutes;
   publication.updatedAt = new Date().toISOString();
@@ -137,6 +145,59 @@ export function markPreReminderSent(id: string): void {
   if (!publication) return;
   publication.preReminderSentAt = new Date().toISOString();
   persist();
+}
+
+export function duplicate(id: string): Publication | null {
+  const source = getById(id);
+  if (!source) return null;
+  return create({
+    compteId: source.compteId,
+    type: source.type,
+    titre: source.titre,
+    description: source.description,
+    hashtags: [...source.hashtags],
+    videoPath: source.videoPath,
+    photoPaths: [...source.photoPaths],
+    thumbnailPath: source.thumbnailPath,
+    visibilite: source.visibilite,
+    scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    reminderLeadMinutes: source.reminderLeadMinutes,
+  });
+}
+
+export function markPublishing(id: string): void {
+  const store = getStore();
+  const publication = store.publications.find((p) => p.id === id);
+  if (!publication) return;
+  publication.statut = 'en_cours';
+  publication.attemptCount += 1;
+  publication.lastError = null;
+  publication.updatedAt = new Date().toISOString();
+  persist();
+}
+
+export function markPublishFailed(id: string, error: string): void {
+  const store = getStore();
+  const publication = store.publications.find((p) => p.id === id);
+  if (!publication) return;
+  publication.statut = 'echec';
+  publication.lastError = error.slice(0, 500);
+  publication.updatedAt = new Date().toISOString();
+  persist();
+}
+
+export function markPublishedRemote(id: string, remoteId: string | null, remoteUrl: string | null): Publication {
+  const store = getStore();
+  const publication = store.publications.find((p) => p.id === id);
+  if (!publication) throw new Error(t('validation.publicationMissing'));
+  publication.statut = 'publie';
+  publication.publishedAt = new Date().toISOString();
+  if (remoteId) publication.remoteId = remoteId;
+  if (remoteUrl) publication.remoteUrl = remoteUrl;
+  publication.lastError = null;
+  publication.updatedAt = new Date().toISOString();
+  persist();
+  return publication;
 }
 
 export function remove(id: string): void {

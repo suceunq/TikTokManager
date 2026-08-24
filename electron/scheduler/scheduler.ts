@@ -1,13 +1,40 @@
 import { BrowserWindow } from 'electron';
 import * as publicationsRepo from '../db/publications.repo';
+import * as accountsRepo from '../db/accounts.repo';
 import * as settingsRepo from '../db/settings.repo';
 import { notify } from './notifier';
+import { publishPublication } from '../publish/engine';
+import { isManualOnly } from '../../shared/compte';
 import { t } from '../i18n';
 
 const TICK_INTERVAL_MS = 30_000;
 const STALE_GRACE_HOURS = 24;
 
 let intervalHandle: ReturnType<typeof setInterval> | null = null;
+const publishing = new Set<string>();
+
+async function autoPublishDue(getMainWindow: () => BrowserWindow | null): Promise<void> {
+  const nowIso = new Date().toISOString();
+  const due = publicationsRepo.listDuePublications(nowIso);
+  for (const pub of due) {
+    if (pub.statut !== 'planifie' || publishing.has(pub.id)) continue;
+    if (isManualOnly(pub.type)) continue;
+    const connexion = accountsRepo.getConnexion(pub.compteId);
+    if (!connexion?.connecte) {
+      notify(
+        t('notification.dueTitle'),
+        t('accounts.connexionRequired') + ' « ' + pub.titre + ' »',
+        pub.id,
+        getMainWindow
+      );
+      continue;
+    }
+    publishing.add(pub.id);
+    void publishPublication(pub.id)
+      .catch((error) => console.error('[scheduler] publication échouée:', error instanceof Error ? error.message : error))
+      .finally(() => publishing.delete(pub.id));
+  }
+}
 
 function tick(getMainWindow: () => BrowserWindow | null): void {
   try {
@@ -53,6 +80,7 @@ function tick(getMainWindow: () => BrowserWindow | null): void {
   } catch (error) {
     console.error('[scheduler] Échec du cycle de rappels:', error);
   }
+  void autoPublishDue(getMainWindow);
 }
 
 export function startScheduler(getMainWindow: () => BrowserWindow | null): void {

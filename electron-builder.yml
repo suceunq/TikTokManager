@@ -16,6 +16,8 @@ extraResources:
     to: build
     filter:
       - 'icon.ico'
+  - from: resources/update-rollback.ps1
+    to: update-rollback.ps1
 win:
   target:
     - target: nsis

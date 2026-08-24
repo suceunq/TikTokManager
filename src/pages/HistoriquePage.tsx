@@ -5,15 +5,17 @@ import { usePublications } from '../context/PublicationsContext';
 import Badge from '../components/Badge';
 import VideoThumbnail from '../components/VideoThumbnail';
 import PhoneFramePreview from '../components/PhoneFramePreview';
+import Button from '../components/Button';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { formatDateShort } from '../lib/dateUtils';
-import { STATUT_COLORS, STATUT_KEYS, TYPE_KEYS } from '../lib/statusLabels';
+import { STATUT_COLORS, STATUT_KEYS, TYPE_KEYS, PLATEFORME_LABELS, PLATEFORME_COLORS } from '../lib/statusLabels';
 import { api } from '../lib/ipc';
 import { useI18n } from '../context/I18nContext';
 
 export default function HistoriquePage() {
   const { t, locale } = useI18n();
   const { accounts, getById: getAccountById } = useAccounts();
-  const { listHistorique, markPublished, cancel } = usePublications();
+  const { listHistorique, markPublished, cancel, retry, duplicate } = usePublications();
   const [compteId, setCompteId] = useState('');
   const [statut, setStatut] = useState<StatutPublication | ''>('');
   const [dateDebut, setDateDebut] = useState('');
@@ -22,6 +24,8 @@ export default function HistoriquePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<Publication | null>(null);
+  const [duplicating, setDuplicating] = useState<Publication | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -50,7 +54,47 @@ export default function HistoriquePage() {
   }, [compteId, statut, dateDebut, dateFin]);
 
   const handlePublish = async () => {
-    await api.shell.openTiktokUpload();
+    if (!previewing) return;
+    if (previewing.statut === 'echec' && previewing.attemptCount > 0) {
+      setActionError(null);
+      try {
+        await retry(previewing.id);
+      } catch (err) {
+        setActionError(`${t('planning.publishFailed')} : ${err instanceof Error ? err.message : String(err)}`);
+      }
+      setPreviewing(null);
+      load();
+      return;
+    }
+    const compte = getAccountById(previewing.compteId);
+    if (compte?.plateforme === 'youtube') await api.shell.openYoutubeUpload();
+    else await api.shell.openTiktokUpload();
+  };
+
+  const handleRetryRow = async (publication: Publication) => {
+    setActionError(null);
+    try {
+      await retry(publication.id);
+    } catch (err) {
+      setActionError(`${t('planning.publishFailed')} : ${err instanceof Error ? err.message : String(err)}`);
+    }
+    load();
+  };
+
+  const handleDuplicateRow = (publication: Publication) => {
+    setDuplicating(publication);
+  };
+
+  const confirmDuplicate = async () => {
+    if (!duplicating) return;
+    try {
+      await duplicate(duplicating.id);
+      setDuplicating(null);
+      load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : String(err));
+      setDuplicating(null);
+    }
   };
 
   const handleMarkPublished = async () => {
@@ -93,7 +137,7 @@ export default function HistoriquePage() {
             <label>{t('history.status')}</label>
             <select className="select" value={statut} onChange={(e) => setStatut(e.target.value as StatutPublication | '')}>
               <option value="">{t('history.defaultStatuses')}</option>
-              <option value="publie">{t('status.published')}</option><option value="manque">{t('status.missed')}</option><option value="annule">{t('status.cancelled')}</option><option value="planifie">{t('status.scheduled')}</option><option value="rappel_envoye">{t('status.reminderSent')}</option>
+              <option value="publie">{t('status.published')}</option><option value="manque">{t('status.missed')}</option><option value="annule">{t('status.cancelled')}</option><option value="planifie">{t('status.scheduled')}</option><option value="rappel_envoye">{t('status.reminderSent')}</option><option value="en_cours">{t('status.inProgress')}</option><option value="echec">{t('status.failed')}</option>
             </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
@@ -108,6 +152,7 @@ export default function HistoriquePage() {
 
         {loading && <div className="loading-state">{t('common.loading')}</div>}
         {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+        {actionError && <p style={{ color: 'var(--color-danger)' }}>{actionError}</p>}
 
         {!loading && rows.length === 0 && (
           <div className="empty-state">
@@ -121,24 +166,38 @@ export default function HistoriquePage() {
             <thead>
               <tr>
                 <th></th>
-                <th>{t('history.titleColumn')}</th><th>{t('planning.account')}</th><th>{t('history.type')}</th><th>{t('history.scheduledDate')}</th><th>{t('history.publishedDate')}</th><th>{t('history.status')}</th>
+                <th>{t('history.titleColumn')}</th><th>{t('planning.account')}</th><th>{t('history.platform')}</th><th>{t('history.type')}</th><th>{t('history.scheduledDate')}</th><th>{t('history.publishedDate')}</th><th>{t('history.status')}</th><th>{t('history.errorColumn')}</th><th></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((p) => {
                 const compte = getAccountById(p.compteId);
                 return (
-                  <tr key={p.id} onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>
-                    <td>
-                      <VideoThumbnail thumbnailPath={p.thumbnailPath} alt={p.titre} />
+                  <tr key={p.id}>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>
+                      <VideoThumbnail thumbnailPath={p.thumbnailPath ?? p.photoPaths[0] ?? null} alt={p.titre} />
                     </td>
-                    <td>{p.titre}</td>
-                    <td>{compte ? compte.nom : '—'}</td>
-                    <td>{t(TYPE_KEYS[p.type])}</td>
-                    <td>{formatDateShort(p.scheduledAt, locale)}</td>
-                    <td>{p.publishedAt ? formatDateShort(p.publishedAt, locale) : t('common.none')}</td>
-                    <td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>{p.titre}</td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>{compte ? compte.nom : '—'}</td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>{compte ? <Badge label={t(PLATEFORME_LABELS[compte.plateforme])} color={PLATEFORME_COLORS[compte.plateforme]} /> : '—'}</td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>{t(TYPE_KEYS[p.type])}</td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>{formatDateShort(p.scheduledAt, locale)}</td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>{p.publishedAt ? formatDateShort(p.publishedAt, locale) : t('common.none')}</td>
+                    <td onClick={() => setPreviewing(p)} style={{ cursor: 'pointer' }}>
                       <Badge label={t(STATUT_KEYS[p.statut])} color={STATUT_COLORS[p.statut]} />
+                    </td>
+                    <td className="error-cell" title={p.lastError ?? undefined}>{p.lastError ? `${p.lastError.slice(0, 60)}${p.lastError.length > 60 ? '…' : ''}` : '—'}</td>
+                    <td>
+                      <div className="row-actions">
+                        {(p.statut === 'echec') && (
+                          <Button variant="secondary" size="sm" onClick={() => handleRetryRow(p)}>
+                            {t('common.retry')}
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => handleDuplicateRow(p)}>
+                          {t('common.duplicate')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -156,6 +215,16 @@ export default function HistoriquePage() {
           onPublish={handlePublish}
           onMarkPublished={handleMarkPublished}
           onCancel={handleCancel}
+        />
+      )}
+
+      {duplicating && (
+        <ConfirmDialog
+          title={t('common.duplicate')}
+          message={`« ${duplicating.titre} »`}
+          confirmLabel={t('common.duplicate')}
+          onConfirm={confirmDuplicate}
+          onCancel={() => setDuplicating(null)}
         />
       )}
     </div>

@@ -14,6 +14,9 @@ interface PublicationsContextValue {
   remove: (id: string) => Promise<void>;
   markPublished: (id: string) => Promise<Publication>;
   cancel: (id: string) => Promise<Publication>;
+  publishNow: (id: string) => Promise<{ ok: boolean; detail?: string }>;
+  retry: (id: string) => Promise<{ ok: boolean; detail?: string }>;
+  duplicate: (id: string) => Promise<Publication | null>;
   getById: (id: string) => Publication | undefined;
 }
 
@@ -76,6 +79,24 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     return updated;
   }, [refresh]);
 
+  const publishNow = useCallback(async (id: string) => {
+    const result = await unwrap(api.publications.publishNow(id));
+    await refresh();
+    return result;
+  }, [refresh]);
+
+  const retry = useCallback(async (id: string) => {
+    const result = await unwrap(api.publications.retry(id));
+    await refresh();
+    return result;
+  }, [refresh]);
+
+  const duplicate = useCallback(async (id: string) => {
+    const created = await unwrap(api.publications.duplicate(id));
+    await refresh();
+    return created;
+  }, [refresh]);
+
   const getById = useCallback((id: string) => publications.find((p) => p.id === id), [publications]);
 
   useEffect(() => {
@@ -84,7 +105,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
   return (
     <PublicationsContext.Provider
-      value={{ publications, loading, error, refresh, listBetween, listHistorique, create, update, remove, markPublished, cancel, getById }}
+      value={{ publications, loading, error, refresh, listBetween, listHistorique, create, update, remove, markPublished, cancel, publishNow, retry, duplicate, getById }}
     >
       {children}
     </PublicationsContext.Provider>

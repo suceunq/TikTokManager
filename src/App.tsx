@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import AppRoutes from './router';
 import { SettingsProvider } from './context/SettingsContext';
@@ -9,31 +8,18 @@ import { UpdateProvider, useUpdate } from './context/UpdateContext';
 import ReleaseNotesDialog from './components/ReleaseNotesDialog';
 import AboutDialog from './components/AboutDialog';
 import FeedbackDialog from './components/FeedbackDialog';
-import { I18nProvider, useI18n } from './context/I18nContext';
+import { I18nProvider } from './context/I18nContext';
 import { WelcomeProvider } from './context/WelcomeContext';
 import WelcomeDialog from './components/WelcomeDialog';
+import { useRouter } from './context/RouterContext';
 
 function ApplicationShell() {
-  const { t } = useI18n();
   const { state, acknowledgeInstalled } = useUpdate();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [updateToastVisible, setUpdateToastVisible] = useState(false);
-  const updateToastShown = useRef(false);
-
-  // Bref rappel auto-disparaissant au debut du telechargement en arriere-plan - l'installation
-  // elle-meme reste entierement silencieuse, ceci indique juste qu'une activite est en cours.
-  useEffect(() => {
-    if (state?.phase !== 'downloading' || updateToastShown.current) return;
-    updateToastShown.current = true;
-    setUpdateToastVisible(true);
-    const timer = setTimeout(() => setUpdateToastVisible(false), 3000);
-    return () => clearTimeout(timer);
-  }, [state?.phase]);
 
   return (
     <div className="app-shell">
-      {updateToastVisible && <div className="update-toast" role="status">{t('update.downloadingToast')}</div>}
       <Sidebar onAbout={() => setAboutOpen(true)} onFeedback={() => setFeedbackOpen(true)} />
       <main className="main-area">
       <AppRoutes />
@@ -47,7 +33,7 @@ function ApplicationShell() {
 }
 
 export default function App() {
-  const navigate = useNavigate();
+  const { navigate } = useRouter();
 
   useEffect(() => {
     const offNotification = window.api.onNotificationNavigate((publicationId) => {

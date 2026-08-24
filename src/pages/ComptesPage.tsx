@@ -1,13 +1,17 @@
-import { useState } from 'react';
-import type { Compte, NouveauCompte } from '@shared/types';
+import { useCallback, useEffect, useState } from 'react';
+import type { Compte, Connexion, NouveauCompte, Plateforme } from '@shared/types';
 import { useAccounts } from '../context/AccountsContext';
 import { usePublications } from '../context/PublicationsContext';
+import { api, unwrap } from '../lib/ipc';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import Badge from '../components/Badge';
+import { PLATEFORME_LABELS, PLATEFORME_COLORS } from '../lib/statusLabels';
+import { handleFor } from '@shared/compte';
 import { useI18n } from '../context/I18nContext';
 
-const PRESET_COLORS = ['#FE2C55', '#25F4EE', '#3B82F6', '#22C55E', '#F59E0B', '#A855F7', '#EC4899', '#6B7280'];
+const PRESET_COLORS = ['#FE2C55', '#25F4EE', '#FF0000', '#3B82F6', '#22C55E', '#F59E0B', '#A855F7', '#EC4899', '#6B7280'];
 
 function AccountForm({
   initial,
@@ -20,20 +24,36 @@ function AccountForm({
 }) {
   const { t } = useI18n();
   const [nom, setNom] = useState(initial?.nom ?? '');
+  const [plateforme, setPlateforme] = useState<'tiktok' | 'youtube'>(initial?.plateforme ?? 'tiktok');
   const [pseudoTiktok, setPseudoTiktok] = useState(initial?.pseudoTiktok ?? '');
+  const [chaineYoutube, setChaineYoutube] = useState(initial?.chaineYoutube ?? '');
   const [couleur, setCouleur] = useState(initial?.couleur ?? PRESET_COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!nom.trim() || !pseudoTiktok.trim()) {
+    if (!nom.trim()) {
       setError(t('accounts.required'));
+      return;
+    }
+    if (plateforme === 'tiktok' && !pseudoTiktok.trim()) {
+      setError(t('accounts.required'));
+      return;
+    }
+    if (plateforme === 'youtube' && !chaineYoutube.trim()) {
+      setError(t('accounts.requiredYoutube'));
       return;
     }
     try {
       setSaving(true);
       setError(null);
-      await onSubmit({ nom: nom.trim(), pseudoTiktok: pseudoTiktok.trim(), couleur });
+      await onSubmit({
+        nom: nom.trim(),
+        plateforme,
+        pseudoTiktok: plateforme === 'tiktok' ? pseudoTiktok.trim() : '',
+        chaineYoutube: plateforme === 'youtube' ? chaineYoutube.trim() : '',
+        couleur,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -62,15 +82,40 @@ function AccountForm({
         <input id="nom" className="input" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('accounts.namePlaceholder')} />
       </div>
       <div className="field">
-        <label htmlFor="pseudo">{t('accounts.handle')}</label>
-        <input
-          id="pseudo"
-          className="input"
-          value={pseudoTiktok}
-          onChange={(e) => setPseudoTiktok(e.target.value)}
-          placeholder={t('accounts.handlePlaceholder')}
-        />
+        <label htmlFor="plateforme">{t('accounts.platform')}</label>
+        <select
+          id="plateforme"
+          className="select"
+          value={plateforme}
+          onChange={(e) => setPlateforme(e.target.value as 'tiktok' | 'youtube')}
+        >
+          <option value="tiktok">{t('platform.tiktok')}</option>
+          <option value="youtube">{t('platform.youtube')}</option>
+        </select>
       </div>
+      {plateforme === 'tiktok' ? (
+        <div className="field">
+          <label htmlFor="pseudo">{t('accounts.handle')}</label>
+          <input
+            id="pseudo"
+            className="input"
+            value={pseudoTiktok}
+            onChange={(e) => setPseudoTiktok(e.target.value)}
+            placeholder={t('accounts.handlePlaceholder')}
+          />
+        </div>
+      ) : (
+        <div className="field">
+          <label htmlFor="chaine">{t('accounts.handleYoutube')}</label>
+          <input
+            id="chaine"
+            className="input"
+            value={chaineYoutube}
+            onChange={(e) => setChaineYoutube(e.target.value)}
+            placeholder={t('accounts.handleYoutubePlaceholder')}
+          />
+        </div>
+      )}
       <div className="field">
         <label>{t('accounts.color')}</label>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -104,6 +149,55 @@ export default function ComptesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Compte | null>(null);
   const [deleting, setDeleting] = useState<Compte | null>(null);
+  const [connexions, setConnexions] = useState<Record<string, Connexion>>({});
+  const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [connexionError, setConnexionError] = useState<string | null>(null);
+
+  const refreshConnexions = useCallback(async () => {
+    try {
+      setConnexions(await unwrap(api.connexions.list()));
+    } catch {
+      setConnexions({});
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshConnexions();
+  }, [refreshConnexions]);
+
+  const handleConnect = async (compte: Compte) => {
+    try {
+      setConnectingId(compte.id);
+      setConnexionError(null);
+      const result = await unwrap(api.connexions.connect(compte.id));
+      if (!result.ok) {
+        setConnexionError(
+          result.errorKey === 'connexion.missingCredentials'
+            ? t('settings.credentialsMissing')
+            : t('connexion.failed')
+        );
+        return;
+      }
+      await refreshConnexions();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setConnexionError(
+        message === 'credentials_missing' ? t('settings.credentialsMissing') : t('connexion.failed')
+      );
+    } finally {
+      setConnectingId(null);
+    }
+  };
+
+  const handleDisconnect = async (compte: Compte) => {
+    try {
+      setConnexionError(null);
+      await unwrap(api.connexions.disconnect(compte.id));
+      await refreshConnexions();
+    } catch {
+      setConnexionError(t('connexion.failed'));
+    }
+  };
 
   const publicationCountFor = (compteId: string) =>
     publications.filter((p) => p.compteId === compteId).length;
@@ -145,8 +239,14 @@ export default function ComptesPage() {
         </div>
       )}
 
+      {connexionError && <p style={{ color: 'var(--color-danger)' }}>{connexionError}</p>}
+      <p className="page-subtitle">{t('accounts.connectHelp')}</p>
+
       <div className="accounts-grid">
-        {accounts.map((compte) => (
+        {accounts.map((compte) => {
+          const connexion = connexions[compte.id];
+          const connected = Boolean(connexion?.connecte);
+          return (
           <div className="card account-card" key={compte.id}>
             <div className="account-card-top">
               <div className="account-swatch" style={{ background: compte.couleur }}>
@@ -154,12 +254,27 @@ export default function ComptesPage() {
               </div>
               <div className="account-info">
                 <div className="account-name">{compte.nom}</div>
-                <div className="account-handle">{compte.pseudoTiktok}</div>
+                <div className="account-handle">{handleFor(compte)}</div>
               </div>
+              <Badge label={t(PLATEFORME_LABELS[compte.plateforme])} color={PLATEFORME_COLORS[compte.plateforme]} />
             </div>
             <div className="account-meta-row">
-              <span className="account-handle">{t('accounts.count', { count: publicationCountFor(compte.id) })}</span>
+              <span
+                className={`connexion-state ${connected ? 'is-connected' : 'is-disconnected'}`}
+                title={connected ? connexion?.titreCompte ?? '' : t('accounts.connexionRequired')}
+              >
+                ● {connected ? t('accounts.connected') : t('accounts.notConnected')}
+              </span>
               <div className="account-actions">
+                {connected ? (
+                  <Button variant="ghost" size="sm" onClick={() => handleDisconnect(compte)}>
+                    {t('accounts.disconnect')}
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" disabled={connectingId === compte.id} onClick={() => handleConnect(compte)}>
+                    {connectingId === compte.id ? t('accounts.connecting') : t('accounts.connect')}
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setEditing(compte)}>
                   {t('common.edit')}
                 </Button>
@@ -168,8 +283,12 @@ export default function ComptesPage() {
                 </Button>
               </div>
             </div>
+            <div className="account-meta-row">
+              <span className="account-handle">{t('accounts.count', { count: publicationCountFor(compte.id) })}</span>
+            </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {showForm && <AccountForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />}

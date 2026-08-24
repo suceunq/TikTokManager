@@ -1,11 +1,27 @@
-export type TypeContenu = 'video' | 'story';
+export type Plateforme = 'tiktok' | 'youtube';
 
-export type StatutPublication = 'planifie' | 'rappel_envoye' | 'publie' | 'manque' | 'annule';
+export type TypeContenu = 'video' | 'story' | 'short' | 'photo';
+
+export type StatutPublication = 'planifie' | 'rappel_envoye' | 'en_cours' | 'publie' | 'echec' | 'manque' | 'annule';
+
+export type Visibilite = 'public' | 'unlisted' | 'private' | 'selfOnly' | 'friends';
+
+export interface Connexion {
+  plateforme: Plateforme;
+  connecte: boolean;
+  titreCompte: string | null;
+  avatarUrl: string | null;
+  scopes: string[];
+  connectedAt: string | null;
+  expiresAt: string | null;
+}
 
 export interface Compte {
   id: string;
   nom: string;
+  plateforme: Plateforme;
   pseudoTiktok: string;
+  chaineYoutube: string;
   couleur: string;
   createdAt: string;
   updatedAt: string;
@@ -13,7 +29,9 @@ export interface Compte {
 
 export interface NouveauCompte {
   nom: string;
+  plateforme: Plateforme;
   pseudoTiktok: string;
+  chaineYoutube: string;
   couleur: string;
 }
 
@@ -25,12 +43,18 @@ export interface Publication {
   description: string;
   hashtags: string[];
   videoPath: string;
+  photoPaths: string[];
   thumbnailPath: string | null;
+  visibilite: Visibilite | null;
   scheduledAt: string;
   reminderLeadMinutes: number | null;
   preReminderSentAt: string | null;
   statut: StatutPublication;
   publishedAt: string | null;
+  remoteId: string | null;
+  remoteUrl: string | null;
+  lastError: string | null;
+  attemptCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,7 +66,9 @@ export interface NouvellePublication {
   description: string;
   hashtags: string[];
   videoPath: string;
+  photoPaths: string[];
   thumbnailPath: string | null;
+  visibilite: Visibilite | null;
   scheduledAt: string;
   reminderLeadMinutes: number | null;
 }
@@ -57,6 +83,21 @@ export interface Settings {
   showWelcomeOnStartup: boolean;
 }
 
+export interface CredentialsApi {
+  googleClientId: string;
+  googleClientSecret: string;
+  tiktokClientKey: string;
+  tiktokClientSecret: string;
+}
+
+export interface ConnexionResult {
+  ok: boolean;
+  titreCompte?: string;
+  avatarUrl?: string | null;
+  errorKey?: string;
+  detail?: string;
+}
+
 export interface HistoriqueFiltre {
   compteId?: string;
   statut?: StatutPublication;
@@ -69,6 +110,17 @@ export interface ImportVideoResult {
   thumbnailPath: string | null;
   originalName: string;
   validation: ValidationVideo;
+}
+
+export interface ImportMediaResult {
+  kind: 'video' | 'photo';
+  mediaPath: string;
+  originalName: string;
+  thumbnailPath: string | null;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
 }
 
 export interface ValidationVideo {

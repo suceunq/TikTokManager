@@ -15,6 +15,9 @@ export const IPC = {
     REMOVE: 'publications:remove',
     MARK_PUBLISHED: 'publications:markPublished',
     CANCEL: 'publications:cancel',
+    PUBLISH_NOW: 'publications:publishNow',
+    RETRY: 'publications:retry',
+    DUPLICATE: 'publications:duplicate',
   },
   SETTINGS: {
     GET: 'settings:get',
@@ -22,9 +25,21 @@ export const IPC = {
   },
   FILES: {
     IMPORT_VIDEO: 'files:importVideo',
+    IMPORT_MEDIA: 'files:importMedia',
+    IMPORT_FROM_PATHS: 'files:importFromPaths',
+  },
+  CONNEXIONS: {
+    LIST: 'connexions:list',
+    CONNECT: 'connexions:connect',
+    DISCONNECT: 'connexions:disconnect',
+  },
+  CREDENTIALS: {
+    STATUS: 'credentials:status',
+    SAVE: 'credentials:save',
   },
   SHELL: {
     OPEN_TIKTOK_UPLOAD: 'shell:openTiktokUpload',
+    OPEN_YOUTUBE_UPLOAD: 'shell:openYoutubeUpload',
     OPEN_DONATION: 'shell:openDonation',
   },
   UPDATE: {

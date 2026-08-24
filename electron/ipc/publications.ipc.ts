@@ -4,6 +4,7 @@ import * as publicationsRepo from '../db/publications.repo';
 import { handle } from './helpers';
 import * as accountsRepo from '../db/accounts.repo';
 import { validateDateRange, validateHistoryFilter, validateId, validatePublication } from '../validation';
+import { publishPublication } from '../publish/engine';
 import { t } from '../i18n';
 
 export function registerPublicationsIpc(): void {
@@ -41,4 +42,27 @@ export function registerPublicationsIpc(): void {
   );
 
   handle(IPC.PUBLICATIONS.CANCEL, (id: string) => publicationsRepo.setStatut(validateId(id), 'annule'));
+
+  handle(IPC.PUBLICATIONS.PUBLISH_NOW, async (id: string) => {
+    const validId = validateId(id);
+    await publishPublication(validId);
+    return { ok: true };
+  });
+
+  handle(IPC.PUBLICATIONS.RETRY, async (id: string) => {
+    const validId = validateId(id);
+    const publication = publicationsRepo.getById(validId);
+    if (!publication) throw new Error(t('validation.publicationMissing'));
+    if (publication.statut !== 'echec' && publication.statut !== 'planifie') {
+      throw new Error(t('validation.invalid', { label: t('validation.contentType') }));
+    }
+    await publishPublication(validId);
+    return { ok: true };
+  });
+
+  handle(IPC.PUBLICATIONS.DUPLICATE, (id: string) => {
+    const duplicate = publicationsRepo.duplicate(validateId(id));
+    if (!duplicate) throw new Error(t('validation.publicationMissing'));
+    return duplicate;
+  });
 }

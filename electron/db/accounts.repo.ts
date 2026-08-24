@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { getStore, persist } from './store';
-import type { Compte, NouveauCompte } from '../../shared/types';
+import type { Compte, Connexion, NouveauCompte } from '../../shared/types';
 import { cleanupPublicationMedia } from '../media/cleanup';
 import { getLocale, t } from '../i18n';
 
@@ -17,7 +17,9 @@ export function create(input: NouveauCompte): Compte {
   const compte: Compte = {
     id: randomUUID(),
     nom: input.nom,
+    plateforme: input.plateforme,
     pseudoTiktok: input.pseudoTiktok,
+    chaineYoutube: input.chaineYoutube,
     couleur: input.couleur,
     createdAt: now,
     updatedAt: now,
@@ -32,7 +34,9 @@ export function update(id: string, input: NouveauCompte): Compte {
   const compte = store.comptes.find((c) => c.id === id);
   if (!compte) throw new Error(t('validation.accountMissing'));
   compte.nom = input.nom;
+  compte.plateforme = input.plateforme;
   compte.pseudoTiktok = input.pseudoTiktok;
+  compte.chaineYoutube = input.chaineYoutube;
   compte.couleur = input.couleur;
   compte.updatedAt = new Date().toISOString();
   persist();
@@ -50,4 +54,20 @@ export function remove(id: string): void {
   store.publications = store.publications.filter((p) => p.compteId !== id);
   persist();
   for (const publication of removed) cleanupPublicationMedia(publication.videoPath, publication.thumbnailPath);
+}
+
+export function getConnexion(compteId: string): Connexion | null {
+  return getStore().connexions[compteId] ?? null;
+}
+
+export function setConnexion(compteId: string, connexion: Connexion): void {
+  const store = getStore();
+  store.connexions[compteId] = connexion;
+  persist();
+}
+
+export function clearConnexion(compteId: string): void {
+  const store = getStore();
+  delete store.connexions[compteId];
+  persist();
 }

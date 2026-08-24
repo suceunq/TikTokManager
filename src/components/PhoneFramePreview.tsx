@@ -4,14 +4,15 @@ import Button from './Button';
 import Badge from './Badge';
 import { toAppMediaUrl } from '../lib/mediaUrl';
 import { formatDateLong } from '../lib/dateUtils';
-import { STATUT_COLORS, STATUT_KEYS, TYPE_KEYS } from '../lib/statusLabels';
+import { STATUT_COLORS, STATUT_KEYS, TYPE_KEYS, PLATEFORME_LABELS } from '../lib/statusLabels';
 import { useI18n } from '../context/I18nContext';
+import { api } from '../lib/ipc';
 
 interface PhoneFramePreviewProps {
   publication: Publication;
   compte: Compte | undefined;
   onClose: () => void;
-  onPublish: () => void;
+  onPublish?: () => void;
   onMarkPublished: () => void;
   onCancel?: () => void;
 }
@@ -26,21 +27,44 @@ export default function PhoneFramePreview({
 }: PhoneFramePreviewProps) {
   const { t, locale } = useI18n();
   const videoUrl = toAppMediaUrl(publication.videoPath);
+  const photoUrls = publication.photoPaths
+    .map((photoPath) => toAppMediaUrl(photoPath))
+    .filter((url): url is string => Boolean(url));
   const canPublish = publication.statut === 'planifie' || publication.statut === 'rappel_envoye';
+  const isYoutube = compte?.plateforme === 'youtube';
+  const isStory = publication.type === 'story';
+
+  const handlePublish = async () => {
+    if (onPublish) {
+      onPublish();
+      return;
+    }
+    if (isYoutube) await api.shell.openYoutubeUpload();
+    else await api.shell.openTiktokUpload();
+  };
 
   return (
     <Modal title={t('preview.title')} onClose={onClose} wide>
       <div className="phone-frame-wrapper">
         <div className="phone-frame">
           <div className="phone-frame-screen">
-            {videoUrl ? (
+            {photoUrls.length > 0 ? (
+              <div className="phone-photo-strip">
+                {photoUrls.map((url) => (
+                  <img key={url} src={url} alt={publication.titre} />
+                ))}
+              </div>
+            ) : videoUrl ? (
               <video src={videoUrl} controls />
             ) : (
               <div style={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                 {t('preview.videoUnavailable')}
               </div>
             )}
-            <div className="phone-overlay-top">{t(TYPE_KEYS[publication.type])}</div>
+            <div className="phone-overlay-top">
+              {t(TYPE_KEYS[publication.type])}
+              {compte && <span> · {t(PLATEFORME_LABELS[compte.plateforme])}</span>}
+            </div>
             <div className="phone-overlay-bottom">
               <div className="phone-account-row">
                 <span
@@ -52,7 +76,7 @@ export default function PhoneFramePreview({
                     display: 'inline-block',
                   }}
                 />
-                {compte ? compte.pseudoTiktok : t('preview.unknownAccount')}
+                {compte ? (compte.plateforme === 'youtube' ? compte.chaineYoutube : compte.pseudoTiktok) : t('preview.unknownAccount')}
               </div>
               <div className="phone-caption">{publication.titre}</div>
               {publication.hashtags.length > 0 && (
@@ -83,9 +107,10 @@ export default function PhoneFramePreview({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {isStory && <div className="notice notice-warning">{t('planning.storyUnavailable')}</div>}
             {canPublish && (
-              <Button variant="primary" onClick={onPublish}>
-                {t('preview.publish')}
+              <Button variant="primary" onClick={() => void handlePublish()}>
+                {isYoutube ? t('preview.publishYoutube') : t('preview.publish')}
               </Button>
             )}
             {canPublish && (

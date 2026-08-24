@@ -9,6 +9,7 @@ import { registerFilesIpc } from './ipc/files.ipc';
 import { registerPublicationsIpc } from './ipc/publications.ipc';
 import { registerShellIpc } from './ipc/shell.ipc';
 import { registerUpdaterIpc } from './ipc/updater.ipc';
+import { registerConnexionsIpc } from './ipc/connexions.ipc';
 import { startScheduler, stopScheduler } from './scheduler/scheduler';
 import { createTray, refreshTray } from './tray/tray';
 import { isQuitting, setQuitting } from './appState';
@@ -16,6 +17,7 @@ import { AppUpdater } from './updater';
 import * as settingsRepo from './db/settings.repo';
 import type { UpdateState } from '../shared/types';
 import { cleanupOrphanMedia } from './media/cleanup';
+import { isAllowedExternalWindow } from './security';
 
 app.setName('TikTok Manager');
 app.setAppUserModelId('com.tiktokmanager.app');
@@ -24,6 +26,9 @@ registerAppMediaProtocolScheme();
 
 let mainWindow: BrowserWindow | null = null;
 let appUpdater: AppUpdater;
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) app.quit();
 
 function getMainWindow(): BrowserWindow | null {
   return mainWindow;
@@ -57,11 +62,16 @@ function createWindow(startMinimized: boolean): void {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://')) void shell.openExternal(url);
+    if (isAllowedExternalWindow(url)) void shell.openExternal(url);
     return { action: 'deny' };
   });
   mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
   mainWindow.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  mainWindow.webContents.session.setPermissionCheckHandler(() => false);
+  mainWindow.webContents.on('will-attach-webview', (event) => event.preventDefault());
+  mainWindow.webContents.once('did-finish-load', () => {
+    void appUpdater.confirmHealthyStartup();
+  });
 
   if (!app.isPackaged) {
     mainWindow.loadURL('http://localhost:5173');
@@ -82,7 +92,7 @@ function createWindow(startMinimized: boolean): void {
   });
 }
 
-app.whenReady().then(() => {
+if (hasSingleInstanceLock) app.whenReady().then(() => {
   registerAppMediaProtocolHandler();
 
   registerAccountsIpc();
@@ -94,8 +104,12 @@ app.whenReady().then(() => {
   registerFilesIpc(getMainWindow);
   registerPublicationsIpc();
   registerShellIpc();
+  registerConnexionsIpc();
 
-  appUpdater = new AppUpdater(broadcastUpdateState);
+  appUpdater = new AppUpdater(broadcastUpdateState, () => {
+    setQuitting(true);
+    stopScheduler();
+  });
   registerUpdaterIpc(appUpdater);
   Menu.setApplicationMenu(buildAppMenu(getMainWindow, appUpdater));
 
@@ -115,11 +129,22 @@ app.whenReady().then(() => {
       mainWindow?.show();
     }
   });
+
+  app.on('second-instance', () => {
+    if (!mainWindow) {
+      createWindow(false);
+      return;
+    }
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
 });
 
 app.on('before-quit', () => {
   setQuitting(true);
   stopScheduler();
+  appUpdater?.dispose();
 });
 
 app.on('window-all-closed', () => {

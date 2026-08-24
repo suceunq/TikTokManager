@@ -1,19 +1,15 @@
-import { Routes, Route } from 'react-router-dom';
 import CalendrierPage from './pages/CalendrierPage';
 import PlanificationFormPage from './pages/PlanificationFormPage';
 import ComptesPage from './pages/ComptesPage';
 import HistoriquePage from './pages/HistoriquePage';
 import ParametresPage from './pages/ParametresPage';
+import { useRouter } from './context/RouterContext';
 
 export default function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<CalendrierPage />} />
-      <Route path="/planification/nouvelle" element={<PlanificationFormPage />} />
-      <Route path="/planification/:id/editer" element={<PlanificationFormPage />} />
-      <Route path="/comptes" element={<ComptesPage />} />
-      <Route path="/historique" element={<HistoriquePage />} />
-      <Route path="/parametres" element={<ParametresPage />} />
-    </Routes>
-  );
+  const { path } = useRouter();
+  if (path === '/planification/nouvelle' || /^\/planification\/[^/]+\/editer$/.test(path)) return <PlanificationFormPage />;
+  if (path === '/comptes') return <ComptesPage />;
+  if (path === '/historique') return <HistoriquePage />;
+  if (path === '/parametres') return <ParametresPage />;
+  return <CalendrierPage />;
 }

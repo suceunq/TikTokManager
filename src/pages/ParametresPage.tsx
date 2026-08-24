@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useUpdate } from '../context/UpdateContext';
 import { formatReleaseNotes } from '../lib/releaseNotes';
+import { api, unwrap } from '../lib/ipc';
 import Button from '../components/Button';
 import { SUPPORTED_LOCALES, type LanguagePreference } from '@shared/i18n';
 import { useI18n } from '../context/I18nContext';
@@ -111,7 +112,86 @@ export default function ParametresPage() {
         <div><Button variant="secondary" onClick={showWelcome}>{t('settings.previewWelcome')}</Button></div>
       </div>
 
+      <ApiCredentialsSection />
+
       <UpdateSection />
+    </div>
+  );
+}
+
+function ApiCredentialsSection() {
+  const { t } = useI18n();
+  const [status, setStatus] = useState<{ configured: boolean; redirectUris: string[] } | null>(null);
+  const [googleClientId, setGoogleClientId] = useState('');
+  const [googleClientSecret, setGoogleClientSecret] = useState('');
+  const [tiktokClientKey, setTiktokClientKey] = useState('');
+  const [tiktokClientSecret, setTiktokClientSecret] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    unwrap(api.credentials.status())
+      .then(setStatus)
+      .catch(() => setStatus({ configured: false, redirectUris: [] }));
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      await unwrap(api.credentials.save({ googleClientId, googleClientSecret, tiktokClientKey, tiktokClientSecret }));
+      setSaved(true);
+      setGoogleClientId('');
+      setGoogleClientSecret('');
+      setTiktokClientKey('');
+      setTiktokClientSecret('');
+      setStatus(await unwrap(api.credentials.status()));
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="card" style={{ maxWidth: 520, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <h2 style={{ margin: 0, fontSize: 16 }}>{t('settings.apiCredentials')}</h2>
+        <p className="hint">{t('settings.credentialsHelp')}</p>
+      </div>
+      {error && <p style={{ color: 'var(--color-danger)', margin: 0 }}>{error}</p>}
+      {saved && <p style={{ color: 'var(--color-success)', margin: 0 }}>{t('settings.credentialsSaved')}</p>}
+      <div className="field">
+        <label htmlFor="googleClientId">{t('settings.googleClientId')}</label>
+        <input id="googleClientId" className="input" value={googleClientId} onChange={(e) => setGoogleClientId(e.target.value)} placeholder={status?.configured ? '••••••••' : ''} autoComplete="off" />
+      </div>
+      <div className="field">
+        <label htmlFor="googleClientSecret">{t('settings.googleClientSecret')}</label>
+        <input id="googleClientSecret" type="password" className="input" value={googleClientSecret} onChange={(e) => setGoogleClientSecret(e.target.value)} placeholder={status?.configured ? '••••••••' : ''} autoComplete="new-password" />
+      </div>
+      <div className="field">
+        <label htmlFor="tiktokClientKey">{t('settings.tiktokClientKey')}</label>
+        <input id="tiktokClientKey" className="input" value={tiktokClientKey} onChange={(e) => setTiktokClientKey(e.target.value)} placeholder={status?.configured ? '••••••••' : ''} autoComplete="off" />
+      </div>
+      <div className="field">
+        <label htmlFor="tiktokClientSecret">{t('settings.tiktokClientSecret')}</label>
+        <input id="tiktokClientSecret" type="password" className="input" value={tiktokClientSecret} onChange={(e) => setTiktokClientSecret(e.target.value)} placeholder={status?.configured ? '••••••••' : ''} autoComplete="new-password" />
+      </div>
+      {status && status.redirectUris.length > 0 && (
+        <div className="field">
+          <span className="hint">{t('settings.redirectUris')}</span>
+          {status.redirectUris.map((uri) => (
+            <code key={uri} style={{ display: 'block', fontSize: 12, marginTop: 4 }}>{uri}</code>
+          ))}
+        </div>
+      )}
+      <div>
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? t('common.saving') : saved ? t('settings.saved') : t('common.save')}
+        </Button>
+      </div>
     </div>
   );
 }
