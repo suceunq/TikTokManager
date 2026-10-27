@@ -7,6 +7,10 @@ import { useRouter } from './context/RouterContext';
 
 export default function AppRoutes() {
   const { path } = useRouter();
+  return <div key={path} className="page-enter">{renderRoute(path)}</div>;
+}
+
+function renderRoute(path: string) {
   if (path === '/planification/nouvelle' || /^\/planification\/[^/]+\/editer$/.test(path)) return <PlanificationFormPage />;
   if (path === '/comptes') return <ComptesPage />;
   if (path === '/historique') return <HistoriquePage />;
