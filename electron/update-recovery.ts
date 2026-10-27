@@ -1,8 +1,24 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { copyFile, cp, mkdir, readFile, readdir, rm, stat, statfs } from 'node:fs/promises';
+import * as nodeFs from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+
+/**
+ * Dans Electron, le module `fs` standard traite tout fichier `.asar` comme un dossier virtuel :
+ * copier ou supprimer l'installation (qui contient resources/app.asar) échouait alors avec
+ * « Invalid package ... app.asar » et la mise à jour ne démarrait jamais. `original-fs` voit
+ * `app.asar` comme un simple fichier. Repli sur `fs` hors d'Electron (tests Node).
+ */
+const fsp: typeof nodeFs = (() => {
+  try {
+    return (require('original-fs') as typeof import('node:fs')).promises as unknown as typeof nodeFs;
+  } catch {
+    return nodeFs;
+  }
+})();
+const { copyFile, cp, mkdir, readdir, rm, stat, statfs } = fsp;
 
 export interface RecoveryPlan {
   installDir: string;
